@@ -1,0 +1,105 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { UserProvider } from './contexts/UserContext';
+import { PinDiarioProvider } from './contexts/PinDiarioContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import PublicRoute from './components/PublicRoute';
+import DashboardLayout from './layouts/DashboardLayout';
+import LandingPage from './pages/LandingPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import Home from './pages/Home';
+import Notas from './pages/Notas';
+import Tareas from './pages/Tareas';
+import Calendario from './pages/Calendario';
+import { Diario } from './pages/Diario';
+import Configuracion from './pages/Configuracion';
+import Papelera from './pages/Papelera';
+import './App.css';
+
+function App() {
+  return (
+    <ThemeProvider>
+      <UserProvider>
+        <PinDiarioProvider>
+          <Router>
+            <div className="App">
+              <Routes>
+                {/* Rutas públicas - solo accesibles si NO está autenticado */}
+                <Route path="/" element={
+                  <PublicRoute>
+                    <LandingPage />
+                  </PublicRoute>
+                } />
+                <Route path="/login" element={
+                  <PublicRoute>
+                    <LoginPage />
+                  </PublicRoute>
+                } />
+                <Route path="/register" element={
+                  <PublicRoute>
+                    <RegisterPage />
+                  </PublicRoute>
+                } />
+                
+                {/* Rutas protegidas - solo accesibles si está autenticado */}
+                <Route path="/home" element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <Home />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/notas" element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <Notas />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/tareas" element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <Tareas />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/calendario" element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <Calendario />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/diario" element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <Diario />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/configuracion" element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <Configuracion />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/papelera" element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <Papelera />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                } />
+              </Routes>
+            </div>
+          </Router>
+        </PinDiarioProvider>
+      </UserProvider>
+    </ThemeProvider>
+  );
+}
+
+export default App;
