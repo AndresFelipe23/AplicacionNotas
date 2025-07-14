@@ -212,7 +212,7 @@ const Notas: React.FC = () => {
   }
 
   return (
-    <div className="flex h-full bg-slate-50">
+    <div className="flex h-full bg-white">
       {/* Overlay para móvil */}
       {isMobile && showSidebar && (
         <div
@@ -225,7 +225,7 @@ const Notas: React.FC = () => {
       <aside 
         className={`
           ${isMobile ? 'fixed' : 'relative'} top-0 left-0 z-50 h-full
-          bg-white border-r border-slate-200 shadow-xl flex flex-col
+          bg-white flex flex-col
           transition-all duration-300 ease-in-out
           ${isMobile 
             ? (showSidebar ? 'translate-x-0 w-80' : '-translate-x-full w-80')

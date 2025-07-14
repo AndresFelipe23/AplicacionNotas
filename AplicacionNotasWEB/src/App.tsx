@@ -6,6 +6,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
 import DashboardLayout from './layouts/DashboardLayout';
+import SidebarOnlyLayout from './layouts/SidebarOnlyLayout'; // Agregar esta importación
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -24,7 +25,7 @@ function App() {
       <UserProvider>
         <PinDiarioProvider>
           <Router>
-            <div className="App">
+            <div>
               <Routes>
                 {/* Rutas públicas - solo accesibles si NO está autenticado */}
                 <Route path="/" element={
@@ -51,20 +52,24 @@ function App() {
                     </DashboardLayout>
                   </ProtectedRoute>
                 } />
+                
+                {/* Rutas con sidebar propio - usan SidebarOnlyLayout */}
                 <Route path="/notas" element={
                   <ProtectedRoute>
-                    <DashboardLayout>
+                    <SidebarOnlyLayout>
                       <Notas />
-                    </DashboardLayout>
+                    </SidebarOnlyLayout>
                   </ProtectedRoute>
                 } />
                 <Route path="/tareas" element={
                   <ProtectedRoute>
-                    <DashboardLayout>
+                    <SidebarOnlyLayout>
                       <Tareas />
-                    </DashboardLayout>
+                    </SidebarOnlyLayout>
                   </ProtectedRoute>
                 } />
+                
+                {/* Rutas tipo dashboard - usan DashboardLayout */}
                 <Route path="/calendario" element={
                   <ProtectedRoute>
                     <DashboardLayout>

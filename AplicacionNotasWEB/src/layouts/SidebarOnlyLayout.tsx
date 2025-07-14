@@ -33,7 +33,7 @@ export default function SidebarOnlyLayout({ children }: { children: ReactNode })
   }, []);
 
   return (
-    <div className="min-h-screen flex h-screen">
+    <div className="fixed inset-0 flex overflow-hidden">
       {/* Sidebar principal */}
       {(!isMobile && sidebarOpen) && (
         <Sidebar 
@@ -53,11 +53,11 @@ export default function SidebarOnlyLayout({ children }: { children: ReactNode })
         />
       )}
 
-      {/* Main Content: NO margin, NO padding, children se alinean pegados al sidebar */}
-      <div className="flex-1 flex flex-col min-h-screen">
-        {/* Header móvil */}
+      {/* Main Content Area - Ocupa todo el espacio restante */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header móvil - Solo aparece en móvil */}
         {isMobile && (
-          <header className="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 sticky top-0 z-30">
+          <header className="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 shrink-0 z-30">
             <button
               onClick={() => setSidebarOpen(true)}
               className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
@@ -73,12 +73,11 @@ export default function SidebarOnlyLayout({ children }: { children: ReactNode })
             <div className="w-9"></div>
           </header>
         )}
-        {/* Contenido principal sin margen ni padding extra */}
-        <main className="flex-1 flex flex-col">
-          <div className="h-full flex flex-col">
-            {children}
-          </div>
-        </main>
+        
+        {/* Contenido principal - Ocupa toda la altura restante */}
+        <div className="flex-1 overflow-hidden">
+          {children}
+        </div>
       </div>
     </div>
   );

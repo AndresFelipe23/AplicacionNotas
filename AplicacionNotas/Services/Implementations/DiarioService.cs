@@ -62,9 +62,15 @@ namespace AplicacionNotas.Services.Implementations
 
         public async Task<DiarioEntradaDto?> UpdateEntradaAsync(DateTime fecha, ActualizarEntradaDiarioDto request, int usuarioId)
         {
+            // Buscar la entrada existente para obtener el Id
+            var entradaExistente = await _diarioRepository.GetEntradaByDateAsync(fecha, usuarioId);
+            if (entradaExistente == null)
+                return null; // No existe, no se puede actualizar
+
             // Crear entrada para actualización compatible con tu entidad
             var entrada = new EntradasDiario
             {
+                DiaId = entradaExistente.Id, // Asigna el Id correcto
                 DiaUsuarioId = usuarioId,
                 DiaFechaEntrada = DateOnly.FromDateTime(fecha.Date),
                 DiaTitulo = request.Titulo,

@@ -1,4 +1,4 @@
-import { getToken } from '../utils/authUtils';
+import { getToken, logout } from '../utils/authUtils';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -42,6 +42,12 @@ export interface CrearPinDiario {
 }
 
 class DiarioService {
+  onUnauthorized?: () => void;
+
+  setOnUnauthorized(cb: () => void) {
+    this.onUnauthorized = cb;
+  }
+
   private getHeaders(): HeadersInit {
     const token = getToken();
     return {
@@ -56,6 +62,11 @@ class DiarioService {
       headers: this.getHeaders()
     });
 
+    if (response.status === 401) {
+      logout();
+      if (typeof this.onUnauthorized === 'function') this.onUnauthorized();
+      throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+    }
     if (!response.ok) {
       throw new Error('Error al obtener entradas del diario');
     }
@@ -70,6 +81,11 @@ class DiarioService {
       headers: this.getHeaders()
     });
 
+    if (response.status === 401) {
+      logout();
+      if (typeof this.onUnauthorized === 'function') this.onUnauthorized();
+      throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+    }
     if (!response.ok) {
       throw new Error('Error al obtener entrada del diario');
     }
@@ -86,8 +102,16 @@ class DiarioService {
       body: JSON.stringify(entrada)
     });
 
+    if (response.status === 401) {
+      logout();
+      if (typeof this.onUnauthorized === 'function') this.onUnauthorized();
+      throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+    }
     if (!response.ok) {
-      throw new Error('Error al crear entrada del diario');
+      // Lanza un error con el status code
+      const error = new Error('Error al crear entrada del diario');
+      (error as any).status = response.status;
+      throw error;
     }
 
     const data = await response.json();
@@ -136,6 +160,11 @@ class DiarioService {
       body: JSON.stringify(criterios)
     });
 
+    if (response.status === 401) {
+      logout();
+      if (typeof this.onUnauthorized === 'function') this.onUnauthorized();
+      throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+    }
     if (!response.ok) {
       throw new Error('Error al buscar entradas del diario');
     }
@@ -184,6 +213,11 @@ class DiarioService {
       headers: this.getHeaders()
     });
 
+    if (response.status === 401) {
+      logout();
+      if (typeof this.onUnauthorized === 'function') this.onUnauthorized();
+      throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+    }
     if (!response.ok) {
       throw new Error('Error al verificar PIN');
     }
@@ -200,6 +234,11 @@ class DiarioService {
       body: JSON.stringify({ pin })
     });
 
+    if (response.status === 401) {
+      logout();
+      if (typeof this.onUnauthorized === 'function') this.onUnauthorized();
+      throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+    }
     if (!response.ok) {
       throw new Error('Error al crear PIN');
     }
@@ -213,6 +252,11 @@ class DiarioService {
       body: JSON.stringify({ pin })
     });
 
+    if (response.status === 401) {
+      logout();
+      if (typeof this.onUnauthorized === 'function') this.onUnauthorized();
+      throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+    }
     if (!response.ok) {
       throw new Error('Error al verificar PIN');
     }

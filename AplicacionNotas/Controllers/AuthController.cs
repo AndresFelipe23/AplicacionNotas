@@ -264,8 +264,7 @@ namespace AplicacionNotas.Controllers
         public async Task<IActionResult> VerificarPinDiario([FromBody] VerificarPinDiarioDto dto)
         {
             var usuarioId = User.GetUserId();
-            var pinHash = _passwordHelper.HashPin(dto.Pin);
-            var valido = await _usuarioRepository.VerificarPinDiarioAsync(usuarioId, pinHash);
+            var valido = await _usuarioRepository.VerificarPinDiarioAsync(usuarioId, dto.Pin);
             return Ok(new { success = valido });
         }
 
@@ -275,6 +274,17 @@ namespace AplicacionNotas.Controllers
             var usuarioId = User.GetUserId();
             var tienePin = await _usuarioRepository.TienePinDiarioAsync(usuarioId);
             return Ok(new { tienePin });
+        }
+
+        [HttpPost("diario/verificar-password")]
+        public async Task<IActionResult> VerificarPassword([FromBody] VerificarPasswordDto dto)
+        {
+            var usuarioId = User.GetUserId();
+            var usuario = await _usuarioRepository.GetByIdAsync(usuarioId);
+            if (usuario == null) return Unauthorized();
+
+            var esValida = _passwordHelper.VerifyPassword(dto.Password, usuario.UsuPasswordHash);
+            return Ok(new { success = esValida });
         }
     }
 } 

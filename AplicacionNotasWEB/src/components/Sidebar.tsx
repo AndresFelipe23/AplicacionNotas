@@ -44,7 +44,7 @@ export default function Sidebar({
 }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user, logout } = useUser();
   const { theme, getSidebarClasses } = useTheme();
   const [isMobile, setIsMobile] = useState(false);
   const { contador, actualizarContador } = usePapelera();
@@ -67,9 +67,8 @@ export default function Sidebar({
   }, [setSidebarOpen]);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
+    logout();
+    navigate('/');
   };
 
   const handleOpcionClick = (opcion: any) => {
@@ -116,7 +115,8 @@ export default function Sidebar({
     } else if (sidebarColor === 'black') {
       return 'text-white';
     } else {
-      return 'text-white'; // Para colores de tema
+      // Para colores de tema (azul, púrpura, verde, etc.) siempre usar texto blanco
+      return 'text-white';
     }
   };
 
@@ -224,7 +224,7 @@ export default function Sidebar({
                 <p className={`text-sm font-medium ${getTextClasses()} truncate`}>
                   {user.nombre} {user.apellido}
                 </p>
-                <p className={`text-xs ${getTextClasses()}/70 truncate`}>
+                <p className={`text-xs ${theme.sidebarColor === 'white' ? 'text-slate-900' : 'text-white'} truncate`}>
                   {user.email || 'Usuario'}
                 </p>
               </div>
@@ -240,7 +240,11 @@ export default function Sidebar({
               // Determinar clases para el item seleccionado según color del sidebar
               let selectedBg = '';
               let selectedText = '';
+              // Usar getTextClasses para todos los casos
               if (theme.sidebarColor === 'white') {
+                selectedBg = 'bg-slate-100';
+                selectedText = 'text-slate-900';
+              } else if (theme.sidebarColor === 'auto' && !(theme.mode === 'dark' || (theme.mode === 'auto' && document.documentElement.classList.contains('dark')))) {
                 selectedBg = 'bg-slate-100';
                 selectedText = 'text-slate-900';
               } else {
@@ -257,15 +261,15 @@ export default function Sidebar({
                     transition-all duration-200 font-medium
                     ${selected 
                       ? `${selectedBg} ${selectedText} shadow-sm` 
-                      : `${getTextClasses()}/80 ${getHoverClasses()} hover:text-white`
+                      : `${getTextClasses()} ${getHoverClasses()} hover:text-white`
                     }
                     ${sidebarMinimized && !isMobile ? 'justify-center' : ''}
                   `}
                   title={sidebarMinimized && !isMobile ? item.name : ''}
                 >
-                  <item.icon className={`shrink-0 ${sidebarMinimized && !isMobile ? 'w-6 h-6' : 'w-5 h-5'} ${selected ? selectedText : `${getTextClasses()}/70`}`} />
+                  <item.icon className={`shrink-0 ${sidebarMinimized && !isMobile ? 'w-6 h-6' : 'w-5 h-5'} ${selected ? selectedText : (theme.sidebarColor === 'white' ? 'text-slate-900' : 'text-white')}`} />
                   {(!sidebarMinimized || isMobile) && (
-                    <span className="truncate">{item.name}</span>
+                    <span className={`truncate ${selected ? selectedText : (theme.sidebarColor === 'white' ? 'text-slate-900' : 'text-white')}`}>{item.name}</span>
                   )}
                   {(!sidebarMinimized || isMobile) && selected && (
                     <ChevronRight className={`w-4 h-4 ml-auto ${selectedText}`} />
@@ -285,7 +289,7 @@ export default function Sidebar({
           <div className={`${sidebarMinimized && !isMobile ? 'p-2' : 'p-4'}`}>
             {(!sidebarMinimized || isMobile) && (
               <div className="mb-3">
-                <span className={`text-xs font-medium ${getTextClasses()}/60 uppercase tracking-wide`}>
+                <span className={`text-xs font-medium ${theme.sidebarColor === 'white' ? 'text-slate-900' : 'text-white'} uppercase tracking-wide`}>
                   Acciones rápidas
                 </span>
               </div>
@@ -297,7 +301,7 @@ export default function Sidebar({
                   onClick={() => handleOpcionClick(opcion)}
                   className={`
                     group relative w-full flex items-center gap-3 ${sidebarMinimized && !isMobile ? 'px-2 py-2' : 'px-3 py-2'} rounded-lg
-                    ${getTextClasses()}/70 hover:text-white ${getHoverClasses()}
+                    ${theme.sidebarColor === 'white' ? 'text-slate-900 hover:text-slate-700' : 'text-white hover:text-white'} ${getHoverClasses()}
                     transition-all duration-200 font-medium
                     ${sidebarMinimized && !isMobile ? 'justify-center' : ''}
                   `}
@@ -331,8 +335,7 @@ export default function Sidebar({
               onClick={handleLogout}
               className={`
                 group relative w-full flex items-center gap-3 ${sidebarMinimized && !isMobile ? 'px-2 py-2' : 'px-3 py-2'} rounded-lg
-                ${getTextClasses()}/70 hover:text-white ${getHoverClasses()}
-                transition-all duration-200 font-medium
+                bg-red-600 text-white hover:bg-red-700 transition-all duration-200 font-medium
                 ${sidebarMinimized && !isMobile ? 'justify-center' : ''}
               `}
               title={sidebarMinimized && !isMobile ? 'Cerrar sesión' : ''}
@@ -341,7 +344,6 @@ export default function Sidebar({
               {(!sidebarMinimized || isMobile) && (
                 <span className="truncate">Cerrar sesión</span>
               )}
-              {/* Tooltip para modo minimizado */}
               {sidebarMinimized && !isMobile && (
                 <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-2 bg-slate-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap">
                   Cerrar sesión

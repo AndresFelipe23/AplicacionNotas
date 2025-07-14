@@ -28,7 +28,7 @@ export function getToken(): string | null {
 export function logout(): void {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
-  window.location.href = '/login';
+  // La navegación debe hacerse desde el componente llamador usando useNavigate
 }
 
 export function redirectToLogin(): void {

@@ -4,16 +4,19 @@ using AplicacionNotas.Repositories.Interfaces;
 using Dapper;
 using Microsoft.AspNetCore.Connections;
 using System.Data;
+using AplicacionNotas.Helpers;
 
 namespace AplicacionNotas.Repositories.Implementations
 {
     public class UsuarioRepository : IUsuarioRepository
     {
         private readonly IDbConnectionFactory _connectionFactory;
+        private readonly IPasswordHelper _passwordHelper;
 
-        public UsuarioRepository(IDbConnectionFactory connectionFactory)
+        public UsuarioRepository(IDbConnectionFactory connectionFactory, IPasswordHelper passwordHelper)
         {
             _connectionFactory = connectionFactory;
+            _passwordHelper = passwordHelper;
         }
 
         public async Task<Usuario?> GetByEmailAsync(string email)
@@ -117,15 +120,14 @@ namespace AplicacionNotas.Repositories.Implementations
             return filas > 0;
         }
 
-        public async Task<bool> VerificarPinDiarioAsync(int usuarioId, string pinHash)
+        public async Task<bool> VerificarPinDiarioAsync(int usuarioId, string pin)
         {
             using var connection = _connectionFactory.CreateConnection();
-            var esValido = await connection.QueryFirstAsync<int>(
-                "sp_VerificarPinDiario",
-                new { UsuarioId = usuarioId, PinHash = pinHash },
-                commandType: CommandType.StoredProcedure
-            );
-            return esValido == 1;
+            const string sql = "SELECT USU_DiarioPinHash FROM Usuarios WHERE USU_Id = @UsuarioId";
+            var hashAlmacenado = await connection.QueryFirstOrDefaultAsync<string>(sql, new { UsuarioId = usuarioId });
+            if (string.IsNullOrEmpty(hashAlmacenado))
+                return false;
+            return _passwordHelper.VerifyPin(pin, hashAlmacenado);
         }
 
         public async Task<bool> TienePinDiarioAsync(int usuarioId)

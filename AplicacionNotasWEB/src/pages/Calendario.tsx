@@ -13,13 +13,17 @@ import CrearTareaModal from '../components/CrearTareaModal';
 import EditarTareaModal from '../components/EditarTareaModal';
 import DetalleTareaModal from '../components/DetalleTareaModal';
 import { 
-  Calendar as CalendarIcon,
+  Calendar as CalendarIconComponent,
   Filter,
   Plus,
   Target,
   Pause,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Menu,
+  X,
+  BarChart3,
+  Activity
 } from 'lucide-react';
 
 // Configuración del localizador para español
@@ -46,7 +50,7 @@ interface CalendarEvent {
   borderColor?: string;
 }
 
-export default function Calendario() {
+export default function MinimalCalendar() {
   const [tareas, setTareas] = useState<Tarea[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +60,8 @@ export default function Calendario() {
   const [tareaAEditar, setTareaAEditar] = useState<Tarea | null>(null);
   const [tareaDetalle, setTareaDetalle] = useState<Tarea | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [filtros, setFiltros] = useState({
     pendiente: true,
     en_progreso: true,
@@ -64,13 +70,25 @@ export default function Calendario() {
     vencidas: false
   });
 
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      if (!mobile) setSidebarOpen(false);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Colores por estado y prioridad
   const getEventColors = (tarea: Tarea) => {
     const priorityColors = {
-      1: { bg: '#6B7280', border: '#4B5563' },
-      2: { bg: '#3B82F6', border: '#2563EB' },
-      3: { bg: '#F59E0B', border: '#D97706' },
-      4: { bg: '#EF4444', border: '#DC2626' }
+      1: { bg: '#64748b', border: '#475569' },
+      2: { bg: '#3b82f6', border: '#2563eb' },
+      3: { bg: '#f59e0b', border: '#d97706' },
+      4: { bg: '#ef4444', border: '#dc2626' }
     };
 
     const priorityColor = priorityColors[tarea.prioridad];
@@ -88,8 +106,9 @@ export default function Calendario() {
         // Aplicar filtros
         if (!filtros[tarea.estado as keyof typeof filtros]) return false;
         if (filtros.altaPrioridad && tarea.prioridad < 3) return false;
-        if (filtros.vencidas && tarea.fechaVencimiento && new Date(tarea.fechaVencimiento) >= new Date()) return false;
-        if (!filtros.vencidas && tarea.fechaVencimiento && new Date(tarea.fechaVencimiento) < new Date()) return false;
+        if (filtros.vencidas) {
+          return tarea.fechaVencimiento && new Date(tarea.fechaVencimiento) < new Date();
+        }
         return true;
       })
       .map(tarea => {
@@ -140,8 +159,6 @@ export default function Calendario() {
     setShowCrearTareaModal(true);
   };
 
-
-
   // Manejar cambio de filtros
   const handleFilterChange = (filterKey: keyof typeof filtros) => {
     setFiltros(prev => ({
@@ -181,227 +198,315 @@ export default function Calendario() {
 
   // Componente personalizado para eventos
   const EventComponent = ({ event }: { event: CalendarEvent }) => (
-    <div className="p-1 text-xs">
+    <div className="text-xs p-1">
       <div className="font-medium truncate">{event.title}</div>
-      <div className="flex items-center gap-1 mt-1">
-        <div 
-          className="w-2 h-2 rounded-full" 
-          style={{ backgroundColor: event.borderColor }}
-        />
-        <span className="text-xs opacity-75">
-          {event.resource.prioridad === 1 ? 'Baja' :
-           event.resource.prioridad === 2 ? 'Media' :
-           event.resource.prioridad === 3 ? 'Alta' : 'Urgente'}
-        </span>
-      </div>
     </div>
   );
 
+  // Métricas calculadas
+  const totalEventos = events.length;
+  const completadas = events.filter(e => e.resource.completada).length;
+  const enProgreso = events.filter(e => e.resource.estado === 'en_progreso').length;
+  const altaPrioridad = events.filter(e => e.resource.prioridad >= 3).length;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
-      {/* Header mejorado */}
-      <div className="bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+    <div className="h-full bg-white flex">
+      {/* Overlay móvil */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`
+        ${isMobile ? 'fixed' : 'relative'} top-0 left-0 z-50 h-full
+        bg-slate-50 border-r border-slate-200 flex flex-col
+        transition-all duration-300 ease-in-out
+        ${isMobile 
+          ? (sidebarOpen ? 'translate-x-0 w-80' : '-translate-x-full w-80')
+          : 'w-80'
+        }
+      `}>
+        {/* Header del sidebar */}
+        <div className="p-6 border-b border-slate-200 shrink-0">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
-                Calendario de Tareas
-              </h1>
-              <p className="text-slate-600 text-lg">
-                Visualiza y gestiona tus tareas en el tiempo
-              </p>
+              <h2 className="text-lg font-semibold text-slate-900">Panel de Control</h2>
+              <p className="text-sm text-slate-500">Filtros y estadísticas</p>
             </div>
-            
-            <div className="flex items-center gap-3">
+            {isMobile && (
               <button
-                onClick={() => setShowCrearTareaModal(true)}
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl hover:from-blue-700 hover:to-blue-800 transition-all font-medium flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105"
+                onClick={() => setSidebarOpen(false)}
+                className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
               >
-                <Plus className="w-5 h-5" />
-                Nueva Tarea
+                <X className="w-4 h-4 text-slate-600" />
               </button>
+            )}
+          </div>
+          
+          {/* Botón Nueva tarea */}
+          <button
+            onClick={() => setShowCrearTareaModal(true)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors text-sm font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            Nueva tarea
+          </button>
+        </div>
+
+        {/* Contenido del sidebar con scroll */}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <div className="p-6 space-y-6">
+            {/* Filtros */}
+            <div className="space-y-3">
+              <h3 className="font-medium text-slate-900 flex items-center gap-2">
+                <Filter className="w-4 h-4" />
+                Filtros
+              </h3>
+              
+              <div className="space-y-2">
+                <button
+                  onClick={() => handleFilterChange('pendiente')}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all ${
+                    filtros.pendiente 
+                      ? 'bg-blue-100 text-blue-700 border border-blue-200' 
+                      : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Target className="w-3 h-3" />
+                    <span>Pendientes</span>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => handleFilterChange('en_progreso')}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all ${
+                    filtros.en_progreso 
+                      ? 'bg-amber-100 text-amber-700 border border-amber-200' 
+                      : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Pause className="w-3 h-3" />
+                    <span>En progreso</span>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => handleFilterChange('completada')}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all ${
+                    filtros.completada 
+                      ? 'bg-green-100 text-green-700 border border-green-200' 
+                      : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-3 h-3" />
+                    <span>Completadas</span>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => handleFilterChange('altaPrioridad')}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all ${
+                    filtros.altaPrioridad 
+                      ? 'bg-red-100 text-red-700 border border-red-200' 
+                      : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-3 h-3" />
+                    <span>Alta prioridad</span>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => handleFilterChange('vencidas')}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all ${
+                    filtros.vencidas 
+                      ? 'bg-orange-100 text-orange-700 border border-orange-200' 
+                      : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <CalendarIconComponent className="w-3 h-3" />
+                    <span>Vencidas</span>
+                  </div>
+                </button>
+              </div>
             </div>
+
+            {/* Estadísticas */}
+            <div className="space-y-3">
+              <h3 className="font-medium text-slate-900 flex items-center gap-2">
+                <BarChart3 className="w-4 h-4" />
+                Estadísticas
+              </h3>
+              
+              <div className="space-y-2">
+                <div className="bg-white rounded-lg p-3 border border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                      <span className="text-sm text-slate-600">Total eventos</span>
+                    </div>
+                    <span className="font-semibold text-slate-900">{totalEventos}</span>
+                  </div>
+                </div>
+                
+                <div className="bg-white rounded-lg p-3 border border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full" />
+                      <span className="text-sm text-slate-600">Completadas</span>
+                    </div>
+                    <span className="font-semibold text-green-600">{completadas}</span>
+                  </div>
+                </div>
+                
+                <div className="bg-white rounded-lg p-3 border border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-amber-500 rounded-full" />
+                      <span className="text-sm text-slate-600">En progreso</span>
+                    </div>
+                    <span className="font-semibold text-amber-600">{enProgreso}</span>
+                  </div>
+                </div>
+                
+                <div className="bg-white rounded-lg p-3 border border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-red-500 rounded-full" />
+                      <span className="text-sm text-slate-600">Alta prioridad</span>
+                    </div>
+                    <span className="font-semibold text-red-600">{altaPrioridad}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Progreso */}
+            {totalEventos > 0 && (
+              <div className="bg-white rounded-lg p-4 border border-slate-200">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Activity className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-slate-900">Progreso</h3>
+                    <p className="text-sm text-slate-500">Tareas completadas</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600">Completado</span>
+                    <span className="font-medium text-slate-900">
+                      {Math.round((completadas / totalEventos) * 100)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${(completadas / totalEventos) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      </aside>
 
       {/* Contenido principal */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        {/* Filtros compactos */}
-        <div className="mb-8">
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-blue-100 rounded-xl">
-                <Filter className="w-5 h-5 text-blue-600" />
+      <main className="flex-1 flex flex-col">
+        {/* Header principal */}
+        <header className="bg-white border-b border-slate-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {isMobile && (
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                >
+                  <Menu className="w-5 h-5 text-slate-600" />
+                </button>
+              )}
+              <div>
+                <h1 className="text-xl font-semibold text-slate-900">
+                  Calendario
+                </h1>
+                <p className="text-sm text-slate-500">
+                  Visualiza y gestiona tus tareas
+                </p>
               </div>
-              <h3 className="font-semibold text-slate-900 text-lg">Filtros</h3>
             </div>
             
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {!isMobile && (
               <button
-                onClick={() => handleFilterChange('pendiente')}
-                className={`flex items-center gap-2 px-4 py-3 rounded-2xl border-2 transition-all font-medium ${
-                  filtros.pendiente 
-                    ? 'bg-blue-50 border-blue-300 text-blue-700 shadow-sm' 
-                    : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-100'
-                }`}
+                onClick={() => setShowCrearTareaModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors text-sm"
               >
-                <Target className="w-4 h-4" />
-                <span className="text-sm">Pendientes</span>
+                <Plus className="w-4 h-4" />
+                Nueva tarea
               </button>
+            )}
+          </div>
+        </header>
 
-              <button
-                onClick={() => handleFilterChange('en_progreso')}
-                className={`flex items-center gap-2 px-4 py-3 rounded-2xl border-2 transition-all font-medium ${
-                  filtros.en_progreso 
-                    ? 'bg-amber-50 border-amber-300 text-amber-700 shadow-sm' 
-                    : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-100'
-                }`}
-              >
-                <Pause className="w-4 h-4" />
-                <span className="text-sm">En Progreso</span>
-              </button>
-
-              <button
-                onClick={() => handleFilterChange('completada')}
-                className={`flex items-center gap-2 px-4 py-3 rounded-2xl border-2 transition-all font-medium ${
-                  filtros.completada 
-                    ? 'bg-green-50 border-green-300 text-green-700 shadow-sm' 
-                    : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-100'
-                }`}
-              >
-                <CheckCircle className="w-4 h-4" />
-                <span className="text-sm">Completadas</span>
-              </button>
-
-              <button
-                onClick={() => handleFilterChange('altaPrioridad')}
-                className={`flex items-center gap-2 px-4 py-3 rounded-2xl border-2 transition-all font-medium ${
-                  filtros.altaPrioridad 
-                    ? 'bg-red-50 border-red-300 text-red-700 shadow-sm' 
-                    : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-100'
-                }`}
-              >
-                <AlertCircle className="w-4 h-4" />
-                <span className="text-sm">Alta Prioridad</span>
-              </button>
-
-              <button
-                onClick={() => handleFilterChange('vencidas')}
-                className={`flex items-center gap-2 px-4 py-3 rounded-2xl border-2 transition-all font-medium ${
-                  filtros.vencidas 
-                    ? 'bg-orange-50 border-orange-300 text-orange-700 shadow-sm' 
-                    : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-100'
-                }`}
-              >
-                <CalendarIcon className="w-4 h-4" />
-                <span className="text-sm">Vencidas</span>
-              </button>
-            </div>
+        {/* Área del calendario */}
+        <div className="flex-1 p-0">
+          <div className="bg-white overflow-hidden h-full">
+            {loading ? (
+              <div className="flex items-center justify-center h-96">
+                <div className="flex items-center gap-3 text-slate-500">
+                  <div className="w-5 h-5 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+                  <span>Cargando calendario...</span>
+                </div>
+              </div>
+            ) : (
+              <Calendar
+                localizer={localizer}
+                events={events}
+                startAccessor="start"
+                endAccessor="end"
+                style={{ 
+                  height: isMobile ? 500 : 600,
+                  minHeight: isMobile ? 500 : 600 
+                }}
+                onSelectEvent={handleSelectEvent}
+                onSelectSlot={handleSelectSlot}
+                selectable
+                popup
+                tooltipAccessor={(event) => `${event.title} - ${event.resource.descripcion || 'Sin descripción'}`}
+                components={{
+                  event: EventComponent
+                }}
+                views={isMobile ? ['month', 'agenda'] : ['month', 'week', 'day', 'agenda']}
+                defaultView="month"
+                step={60}
+                timeslots={1}
+                messages={{
+                  next: "Siguiente",
+                  previous: "Anterior",
+                  today: "Hoy",
+                  month: "Mes",
+                  week: "Semana",
+                  day: "Día",
+                  agenda: "Agenda",
+                  noEventsInRange: "No hay tareas en este período",
+                  showMore: (total: number) => `+ ${total} más`
+                }}
+                className="minimal-calendar"
+              />
+            )}
           </div>
         </div>
-
-        {/* Calendario principal */}
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-lg overflow-hidden">
-          {loading ? (
-            <div className="flex items-center justify-center h-96">
-              <div className="flex items-center gap-4 text-slate-500">
-                <div className="w-8 h-8 border-3 border-slate-300 border-t-blue-600 rounded-full animate-spin" />
-                <span className="text-lg">Cargando calendario...</span>
-              </div>
-            </div>
-          ) : (
-            <Calendar
-              localizer={localizer}
-              events={events}
-              startAccessor="start"
-              endAccessor="end"
-              style={{ height: 700, minHeight: 700 }}
-              onSelectEvent={handleSelectEvent}
-              onSelectSlot={handleSelectSlot}
-              selectable
-              popup
-              tooltipAccessor={(event) => `${event.title} - ${event.resource.descripcion || 'Sin descripción'}`}
-              components={{
-                event: EventComponent
-              }}
-              views={['month', 'week', 'day', 'agenda']}
-              defaultView="month"
-              step={60}
-              timeslots={1}
-              messages={{
-                next: "Siguiente",
-                previous: "Anterior",
-                today: "Hoy",
-                month: "Mes",
-                week: "Semana",
-                day: "Día",
-                agenda: "Agenda",
-                noEventsInRange: "No hay tareas en este período",
-                showMore: (total: number) => `+ ${total} más`
-              }}
-              className="custom-calendar"
-            />
-          )}
-        </div>
-
-        {/* Estadísticas rápidas */}
-        <div className="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-xl">
-                <Target className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-600">Total Tareas</p>
-                <p className="text-2xl font-bold text-slate-900">{events.length}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-xl">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-600">Completadas</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {events.filter(e => e.resource.completada).length}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-100 rounded-xl">
-                <Pause className="w-5 h-5 text-amber-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-600">En Progreso</p>
-                <p className="text-2xl font-bold text-amber-600">
-                  {events.filter(e => e.resource.estado === 'en_progreso').length}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-100 rounded-xl">
-                <AlertCircle className="w-5 h-5 text-red-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-600">Alta Prioridad</p>
-                <p className="text-2xl font-bold text-red-600">
-                  {events.filter(e => e.resource.prioridad >= 3).length}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      </main>
 
       {/* Modales */}
       <CrearTareaModal
@@ -435,184 +540,162 @@ export default function Calendario() {
         onTareaDeleted={handleDeleteFromDetail}
       />
 
-      {/* Estilos personalizados mejorados */}
+      {/* Estilos minimalistas */}
       <style>{`
-        .custom-calendar .rbc-calendar {
+        .minimal-calendar .rbc-calendar {
           font-family: inherit;
+          font-size: 14px;
         }
         
-        .custom-calendar .rbc-header {
-          background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-          border-bottom: 2px solid #e2e8f0;
-          padding: 16px 12px;
-          font-weight: 700;
-          color: #1e293b;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          font-size: 0.875rem;
-        }
-        
-        .custom-calendar .rbc-event {
-          border-radius: 12px;
-          border: none;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        .minimal-calendar .rbc-header {
+          background: #f8fafc;
+          border-bottom: 1px solid #e2e8f0;
+          padding: 12px 8px;
           font-weight: 600;
+          color: #475569;
           font-size: 0.875rem;
-          padding: 4px 8px;
+        }
+        
+        .minimal-calendar .rbc-event {
+          border-radius: 6px;
+          border: none;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          font-weight: 500;
+          font-size: 0.75rem;
+          padding: 2px 6px;
           margin: 1px;
           transition: all 0.2s ease;
         }
         
-        .custom-calendar .rbc-event:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        .minimal-calendar .rbc-event:hover {
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
         
-        .custom-calendar .rbc-today {
-          background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-          border: 2px solid #3b82f6;
+        .minimal-calendar .rbc-today {
+          background: #f0f9ff;
+          border: 1px solid #0ea5e9;
         }
         
-        .custom-calendar .rbc-off-range-bg {
-          background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        .minimal-calendar .rbc-off-range-bg {
+          background: #f8fafc;
         }
         
-        .custom-calendar .rbc-toolbar {
-          padding: 20px 24px;
-          background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        .minimal-calendar .rbc-toolbar {
+          padding: 16px;
+          background: white;
           border-bottom: 1px solid #e2e8f0;
+          margin-bottom: 0;
         }
         
-        .custom-calendar .rbc-toolbar button {
-          border-radius: 12px;
-          border: 2px solid #d1d5db;
-          background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+        .minimal-calendar .rbc-toolbar button {
+          border-radius: 6px;
+          border: 1px solid #d1d5db;
+          background: white;
           color: #374151;
-          padding: 10px 20px;
-          font-weight: 600;
+          padding: 8px 16px;
+          font-weight: 500;
           font-size: 0.875rem;
           transition: all 0.2s ease;
-          margin: 0 4px;
+          margin: 0 2px;
         }
         
-        .custom-calendar .rbc-toolbar button:hover {
-          background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        .minimal-calendar .rbc-toolbar button:hover {
+          background: #f9fafb;
           border-color: #9ca3af;
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
         
-        .custom-calendar .rbc-toolbar button.rbc-active {
-          background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        .minimal-calendar .rbc-toolbar button.rbc-active {
+          background: #1f2937;
           color: white;
-          border-color: #3b82f6;
-          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+          border-color: #1f2937;
         }
         
-        .custom-calendar .rbc-toolbar button.rbc-active:hover {
-          background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-          transform: translateY(-1px);
-          box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+        .minimal-calendar .rbc-toolbar button.rbc-active:hover {
+          background: #111827;
         }
         
-        .custom-calendar .rbc-month-view {
-          border-radius: 0 0 24px 24px;
-          overflow: hidden;
+        .minimal-calendar .rbc-month-view {
+          border: none;
         }
         
-        .custom-calendar .rbc-month-row {
-          border-bottom: 1px solid #e2e8f0;
-        }
-        
-        .custom-calendar .rbc-date-cell {
-          padding: 8px 12px;
-          font-weight: 500;
-        }
-        
-        .custom-calendar .rbc-date-cell.rbc-now {
-          background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-          color: white;
-          border-radius: 8px;
-          font-weight: 700;
-        }
-        
-        .custom-calendar .rbc-week-view,
-        .custom-calendar .rbc-day-view {
-          border-radius: 0 0 24px 24px;
-          overflow: hidden;
-        }
-        
-        .custom-calendar .rbc-time-header {
-          background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-          border-bottom: 2px solid #e2e8f0;
-        }
-        
-        .custom-calendar .rbc-time-header-content {
-          border-left: 1px solid #e2e8f0;
-        }
-        
-        .custom-calendar .rbc-time-content {
-          border-top: 1px solid #e2e8f0;
-        }
-        
-        .custom-calendar .rbc-time-gutter {
-          background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-          border-right: 1px solid #e2e8f0;
-        }
-        
-        .custom-calendar .rbc-time-slot {
+        .minimal-calendar .rbc-month-row {
           border-bottom: 1px solid #f1f5f9;
         }
         
-        .custom-calendar .rbc-timeslot-group {
+        .minimal-calendar .rbc-date-cell {
+          padding: 6px 8px;
+          font-weight: 500;
+          color: #64748b;
+        }
+        
+        .minimal-calendar .rbc-date-cell.rbc-now {
+          background: #1f2937;
+          color: white;
+          border-radius: 6px;
+          font-weight: 600;
+        }
+        
+        .minimal-calendar .rbc-agenda-view table.rbc-agenda-table thead > tr > th {
+          background: #f8fafc;
           border-bottom: 1px solid #e2e8f0;
-        }
-        
-        .custom-calendar .rbc-agenda-view {
-          border-radius: 0 0 24px 24px;
-          overflow: hidden;
-        }
-        
-        .custom-calendar .rbc-agenda-view table.rbc-agenda-table {
-          border-radius: 0 0 24px 24px;
-          width: 100%;
-        }
-        
-        .custom-calendar .rbc-agenda-view table.rbc-agenda-table thead > tr > th {
-          background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-          border-bottom: 2px solid #e2e8f0;
           padding: 12px 16px;
-          font-weight: 700;
-          color: #1e293b;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
+          font-weight: 600;
+          color: #475569;
           font-size: 0.875rem;
         }
         
-        .custom-calendar .rbc-agenda-view table.rbc-agenda-table tbody > tr > td {
+        .minimal-calendar .rbc-agenda-view table.rbc-agenda-table tbody > tr > td {
           padding: 12px 16px;
-          border-bottom: 1px solid #e2e8f0;
+          border-bottom: 1px solid #f1f5f9;
           vertical-align: top;
         }
         
-        .custom-calendar .rbc-agenda-view table.rbc-agenda-table tbody > tr:hover > td {
+        .minimal-calendar .rbc-agenda-view table.rbc-agenda-table tbody > tr:hover > td {
           background-color: #f8fafc;
         }
         
-        .custom-calendar .rbc-agenda-view table.rbc-agenda-table tbody > tr > td.rbc-agenda-time {
-          font-weight: 600;
-          color: #3b82f6;
-        }
-        
-        .custom-calendar .rbc-agenda-view table.rbc-agenda-table tbody > tr > td.rbc-agenda-event {
-          font-weight: 500;
-        }
-        
-        .custom-calendar .rbc-agenda-view table.rbc-agenda-table tbody > tr > td.rbc-agenda-date {
-          font-weight: 600;
-          color: #64748b;
+        @media (max-width: 768px) {
+          .minimal-calendar .rbc-toolbar {
+            padding: 12px;
+            flex-direction: column;
+            gap: 8px;
+            align-items: stretch;
+          }
+          
+          .minimal-calendar .rbc-toolbar .rbc-toolbar-label {
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 8px 0;
+          }
+          
+          .minimal-calendar .rbc-btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+          }
+          
+          .minimal-calendar .rbc-toolbar button {
+            padding: 6px 12px;
+            font-size: 0.75rem;
+          }
+          
+          .minimal-calendar .rbc-header {
+            padding: 8px 4px;
+            font-size: 0.75rem;
+          }
+          
+          .minimal-calendar .rbc-date-cell {
+            padding: 4px 6px;
+            font-size: 0.875rem;
+          }
+          
+          .minimal-calendar .rbc-event {
+            font-size: 0.65rem;
+            padding: 1px 4px;
+          }
         }
       `}</style>
     </div>
   );
-} 
+}

@@ -1,17 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   Calendar, 
   Plus, 
-  Search,
   BarChart3,
-  Lock,
-  Settings
+  Settings,
+  Menu,
+  X,
+  Edit3,
+  TrendingUp,
+  Save,
+  FileText
 } from 'lucide-react';
 import { usePinDiario } from '../contexts/PinDiarioContext';
-import { diarioService, DiarioEntrada, CrearEntradaDiario } from '../services/diarioService';
+import { diarioService } from '../services/diarioService';
+import type { DiarioEntrada, CrearEntradaDiario } from '../services/diarioService';
 import { CrearPinModal } from '../components/CrearPinModal';
 import { VerificarPinModal } from '../components/VerificarPinModal';
+import CrearEntradaDiarioModal from '../components/CrearEntradaDiarioModal';
+import Swal from 'sweetalert2';
+import TinyMCEEditor from '../components/TinyMCEEditor';
 
 export const Diario: React.FC = () => {
   const { 
@@ -19,8 +27,11 @@ export const Diario: React.FC = () => {
     hasPin, 
     isLoading: pinLoading, 
     authenticatePin, 
-    createPin 
+    createPin, 
+    logout
   } = usePinDiario();
+
+  const navigate = useNavigate();
 
   const [entradas, setEntradas] = useState<DiarioEntrada[]>([]);
   const [entradaActual, setEntradaActual] = useState<DiarioEntrada | null>(null);
@@ -28,16 +39,23 @@ export const Diario: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showCrearPin, setShowCrearPin] = useState(false);
-  const [showVerificarPin, setShowVerificarPin] = useState(false);
   const [showEstadisticas, setShowEstadisticas] = useState(false);
   const [estadisticas, setEstadisticas] = useState<any>(null);
+  const [successMsg, setSuccessMsg] = useState('');
+  const [showCrearModal, setShowCrearModal] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [modalInitialData, setModalInitialData] = useState<Partial<CrearEntradaDiario> | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitulo, setEditTitulo] = useState('');
+  const [editContenido, setEditContenido] = useState('');
+  const [editEstadoAnimo, setEditEstadoAnimo] = useState<number | undefined>(undefined);
 
-  // Estados para el formulario de entrada
-  const [formData, setFormData] = useState<CrearEntradaDiario>({
-    titulo: '',
-    contenido: '',
-    estadoAnimo: undefined
-  });
+  // Obtener mes y año actuales
+  const today = new Date();
+  const [mes] = useState(today.getMonth() + 1);
+  const [año] = useState(today.getFullYear());
 
   const estadosAnimo = [
     { valor: 1, nombre: "Muy mal", emoji: "😢", color: "#EF4444" },
@@ -48,75 +66,113 @@ export const Diario: React.FC = () => {
   ];
 
   useEffect(() => {
-    if (isPinAuthenticated && !pinLoading) {
-      cargarEntradas();
+    const handleResize = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      if (!mobile) setSidebarOpen(false);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    diarioService.setOnUnauthorized(() => navigate('/'));
+    localStorage.removeItem('diarioPinAuthenticated');
+    if (typeof logout === 'function') {
+      logout();
     }
-  }, [isPinAuthenticated, pinLoading, fechaSeleccionada]);
+  }, []);
+
+  useEffect(() => {
+    cargarEntradas();
+    // eslint-disable-next-line
+  }, [mes, año]);
 
   useEffect(() => {
     if (hasPin && !isPinAuthenticated && !pinLoading) {
-      setShowVerificarPin(true);
+      // setShowVerificarPin(true); // No usado
     }
   }, [hasPin, isPinAuthenticated, pinLoading]);
 
+  // Función para cargar entradas
   const cargarEntradas = async () => {
+    setIsLoading(true);
+    setError('');
     try {
-      setIsLoading(true);
-      setError('');
-      const mes = fechaSeleccionada.getMonth() + 1;
-      const año = fechaSeleccionada.getFullYear();
       const data = await diarioService.getEntradas(mes, año);
       setEntradas(data);
-    } catch (err) {
-      setError('Error al cargar las entradas del diario');
-      console.error('Error loading entries:', err);
+    } catch (err: unknown) {
+      setError('Error al obtener entradas del diario');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const cargarEntradaDelDia = async () => {
-    try {
-      const fecha = fechaSeleccionada.toISOString().split('T')[0];
-      const entrada = await diarioService.getEntrada(fecha);
-      setEntradaActual(entrada);
-      setFormData({
-        titulo: entrada.titulo || '',
-        contenido: entrada.contenido || '',
-        estadoAnimo: entrada.estadoAnimo
-      });
-    } catch (err) {
-      // Si no existe entrada para hoy, crear una nueva
-      setEntradaActual(null);
-      setFormData({
-        titulo: '',
-        contenido: '',
-        estadoAnimo: undefined
-      });
-    }
-  };
+  // Cuando cambia la fecha seleccionada, cargar la entrada de ese día
+  useEffect(() => {
+    const fetchEntrada = async () => {
+      try {
+        if (!fechaSeleccionada || isNaN(fechaSeleccionada.getTime())) {
+          setEntradaActual(null);
+          return;
+        }
+        const fecha = fechaSeleccionada.toISOString().split('T')[0];
+        if (fecha === '0001-01-01') {
+          setEntradaActual(null);
+          return;
+        }
+        const entrada = await diarioService.getEntrada(fecha);
+        setEntradaActual(entrada);
+      } catch (err: unknown) {
+        setEntradaActual(null);
+      }
+    };
+    fetchEntrada();
+  }, [fechaSeleccionada, entradas]);
 
-  const guardarEntrada = async () => {
+  // Guardar entrada (crear o editar)
+  const guardarEntrada = async (formData: Omit<CrearEntradaDiario, 'fechaEntrada'>) => {
+    setIsLoading(true);
+    setError('');
     try {
-      setIsLoading(true);
-      setError('');
-      
-      const fecha = fechaSeleccionada.toISOString().split('T')[0];
-      
-      if (entradaActual) {
+      let nueva: DiarioEntrada | undefined;
+      if (isEditMode && entradaActual) {
         // Actualizar entrada existente
-        const actualizada = await diarioService.actualizarEntrada(fecha, formData);
-        setEntradaActual(actualizada);
+        nueva = await diarioService.actualizarEntrada(
+          fechaSeleccionada.toISOString().split('T')[0],
+          formData
+        );
+        setEntradaActual(nueva);
+        setEntradas(
+          entradas.map(e =>
+            e.fechaEntrada === nueva?.fechaEntrada ? nueva! : e
+          )
+        );
       } else {
         // Crear nueva entrada
-        const nueva = await diarioService.crearEntrada(formData);
+        nueva = await diarioService.crearEntrada({
+          ...formData,
+          fechaEntrada: fechaSeleccionada.toISOString().split('T')[0],
+        } as CrearEntradaDiario & { fechaEntrada: string });
+        setEntradas([nueva, ...entradas]);
         setEntradaActual(nueva);
       }
-      
-      await cargarEntradas();
-    } catch (err) {
-      setError('Error al guardar la entrada');
-      console.error('Error saving entry:', err);
+      setSuccessMsg('¡Entrada guardada exitosamente!');
+      setTimeout(() => setSuccessMsg(''), 3000);
+    } catch (err: unknown) {
+      // Detecta error 409 (Conflict)
+      if (err && (err as any).status === 409) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Ya existe una entrada',
+          text: 'No puedes crear dos entradas para el mismo día.',
+          confirmButtonText: 'Aceptar'
+        });
+      } else {
+        setError('Error al guardar entrada del diario');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -129,7 +185,7 @@ export const Diario: React.FC = () => {
       const stats = await diarioService.getEstadisticas(mes, año);
       setEstadisticas(stats);
       setShowEstadisticas(true);
-    } catch (err) {
+    } catch (err: unknown) {
       setError('Error al cargar estadísticas');
     }
   };
@@ -142,305 +198,579 @@ export const Diario: React.FC = () => {
   const handleVerificarPin = async (pin: string) => {
     const isValid = await authenticatePin(pin);
     if (isValid) {
-      setShowVerificarPin(false);
+      // setShowVerificarPin(false); // No usado
     }
     return isValid;
   };
 
+  const handleClosePinModal = (reason?: 'success' | 'cancel') => {
+    if (reason === 'cancel') {
+      navigate('/home');
+    }
+  };
+
+  // Cuando se hace clic en Editar
+  const handleEdit = () => {
+    if (entradaActual) {
+      setEditTitulo(entradaActual.titulo || '');
+      setEditContenido(entradaActual.contenido || '');
+      setEditEstadoAnimo(entradaActual.estadoAnimo);
+      setIsEditing(true);
+    }
+  };
+
+  // Guardar cambios
+  const handleSaveEdit = async () => {
+    if (!entradaActual) return;
+    setIsLoading(true);
+    setError('');
+    try {
+      const nueva = await diarioService.actualizarEntrada(
+        entradaActual.fechaEntrada,
+        {
+          titulo: editTitulo,
+          contenido: editContenido,
+          estadoAnimo: editEstadoAnimo
+        }
+      );
+      setEntradaActual(nueva);
+      setEntradas(
+        entradas.map(e =>
+          e.fechaEntrada === nueva?.fechaEntrada ? nueva! : e
+        )
+      );
+      setSuccessMsg('¡Entrada actualizada exitosamente!');
+      setTimeout(() => setSuccessMsg(''), 3000);
+      setIsEditing(false);
+    } catch (err: unknown) {
+      setError('Error al guardar entrada del diario');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Cancelar edición
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    // Resetear campos a los valores originales
+    if (entradaActual) {
+      setEditTitulo(entradaActual.titulo || '');
+      setEditContenido(entradaActual.contenido || '');
+      setEditEstadoAnimo(entradaActual.estadoAnimo);
+    }
+  };
+
+  // useEffect para sincronizar los campos de edición con la entrada seleccionada
+  useEffect(() => {
+    if (entradaActual) {
+      setEditTitulo(entradaActual.titulo || '');
+      setEditContenido(entradaActual.contenido || '');
+      setEditEstadoAnimo(entradaActual.estadoAnimo);
+    } else {
+      setEditTitulo('');
+      setEditContenido('');
+      setEditEstadoAnimo(undefined);
+    }
+    setIsEditing(false); // Reset editing mode when entry changes
+  }, [entradaActual]);
+
   if (pinLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  if (!hasPin) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-4xl mx-auto p-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center py-12"
-          >
-            <div className="mx-auto w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mb-6 dark:bg-blue-900">
-              <Lock className="w-12 h-12 text-blue-600 dark:text-blue-400" />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-4 dark:text-white">
-              Configura tu PIN del Diario
-            </h1>
-            <p className="text-lg text-gray-600 mb-8 dark:text-gray-400">
-              Para proteger tu diario personal, necesitas crear un PIN de acceso.
-            </p>
-            <button
-              onClick={() => setShowCrearPin(true)}
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <Lock className="w-5 h-5 mr-2" />
-              Crear PIN
-            </button>
-          </motion.div>
+      <div className="flex items-center justify-center min-h-screen bg-white">
+        <div className="flex items-center gap-3 text-slate-600">
+          <div className="w-5 h-5 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+          <span>Cargando...</span>
         </div>
-
-        <CrearPinModal
-          isOpen={showCrearPin}
-          onClose={() => setShowCrearPin(false)}
-          onCreatePin={handleCrearPin}
-        />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-6xl mx-auto p-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Mi Diario Personal
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Registra tus pensamientos y emociones del día
-            </p>
+    <div className="h-full bg-white flex">
+      {/* Overlay móvil */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar del diario */}
+      <aside className={`
+        ${isMobile ? 'fixed' : 'relative'} top-0 left-0 z-50 h-full
+        bg-slate-50 border-r border-slate-200 flex flex-col
+        transition-all duration-300 ease-in-out
+        ${isMobile 
+          ? (sidebarOpen ? 'translate-x-0 w-80' : '-translate-x-full w-80')
+          : 'w-80'
+        }
+      `}>
+        {/* Header del sidebar del diario */}
+        <div className="p-6 border-b border-slate-200 shrink-0">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Diario Personal</h2>
+              <p className="text-sm text-slate-500">Gestiona tus entradas</p>
+            </div>
+            {isMobile && (
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-4 h-4 text-slate-600" />
+              </button>
+            )}
           </div>
-          <div className="flex space-x-3">
-            <button
-              onClick={cargarEstadisticas}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-            >
-              <BarChart3 className="w-4 h-4 mr-2" />
-              Estadísticas
-            </button>
-            <button
-              onClick={() => setShowCrearPin(true)}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              Cambiar PIN
-            </button>
-          </div>
+          
+          {/* Botón Nueva entrada */}
+          <button
+            onClick={() => {
+              setIsEditMode(false);
+              setModalInitialData(null);
+              setShowCrearModal(true);
+            }}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors text-sm font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            Nueva entrada
+          </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Calendario */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Calendario
-              </h2>
-              
-              {/* Calendario simple */}
-              <div className="space-y-2">
-                {entradas.map((entrada) => (
-                  <div
-                    key={entrada.fechaEntrada}
-                    className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 cursor-pointer"
-                    onClick={() => {
-                      const fecha = new Date(entrada.fechaEntrada);
-                      setFechaSeleccionada(fecha);
-                    }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">
-                        {new Date(entrada.fechaEntrada).toLocaleDateString('es-ES', {
-                          day: 'numeric',
-                          month: 'short'
-                        })}
-                      </span>
-                      {entrada.estadoAnimo && (
-                        <span className="text-lg">
-                          {estadosAnimo.find(e => e.valor === entrada.estadoAnimo)?.emoji}
-                        </span>
-                      )}
-                    </div>
-                    {entrada.titulo && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">
-                        {entrada.titulo}
-                      </p>
-                    )}
-                  </div>
-                ))}
+        {/* Contenido del sidebar con scroll */}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <div className="p-6 space-y-6">
+            {/* Fecha actual */}
+            <div className="bg-white rounded-lg p-4 border border-slate-200">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Calendar className="w-4 h-4 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-slate-900">Fecha Actual</h3>
+                  <p className="text-sm text-slate-500">
+                    {fechaSeleccionada.toLocaleDateString('es-ES', {
+                      weekday: 'long',
+                      day: 'numeric',
+                      month: 'long'
+                    })}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Editor de entrada */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {fechaSeleccionada.toLocaleDateString('es-ES', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </h2>
-                <button
-                  onClick={cargarEntradaDelDia}
-                  className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
-                >
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Cargar entrada
-                </button>
-              </div>
-
-              {error && (
-                <div className="mb-4 p-3 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-900 dark:text-red-200">
-                  {error}
+            {/* Entradas del mes */}
+            <div className="space-y-3">
+              <h3 className="font-medium text-slate-900 flex items-center gap-2">
+                <Edit3 className="w-4 h-4" />
+                Entradas de {(() => {
+                  const fecha = new Date(año, mes - 1);
+                  return fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+                })()}
+              </h3>
+              
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-4 h-4 border border-slate-200 border-t-slate-400 rounded-full animate-spin" />
+                </div>
+              ) : entradas.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Edit3 className="w-6 h-6 text-slate-400" />
+                  </div>
+                  <p className="text-sm text-slate-500">No hay entradas este mes</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {entradas.map((entrada) => (
+                    <button
+                      key={entrada.fechaEntrada}
+                      className={`w-full text-left p-3 rounded-lg border transition-all ${
+                        fechaSeleccionada.toISOString().split('T')[0] === entrada.fechaEntrada
+                          ? 'bg-blue-50 border-blue-200 text-blue-700'
+                          : 'bg-white border-slate-200 hover:bg-slate-50'
+                      }`}
+                      onClick={() => {
+                        try {
+                          // Crear fecha correctamente desde string YYYY-MM-DD
+                          const [year, month, day] = entrada.fechaEntrada.split('-');
+                          const fecha = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                          
+                          // Verificar que la fecha es válida antes de seleccionar
+                          if (!isNaN(fecha.getTime())) {
+                            setFechaSeleccionada(fecha);
+                            if (isMobile) setSidebarOpen(false);
+                          }
+                        } catch (error) {
+                          console.error('Error al seleccionar fecha:', error);
+                        }
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium">
+                          {(() => {
+                            try {
+                              // Crear fecha correctamente desde string YYYY-MM-DD
+                              const [year, month, day] = entrada.fechaEntrada.split('-');
+                              const fecha = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                              
+                              // Verificar que la fecha es válida
+                              if (isNaN(fecha.getTime())) {
+                                return entrada.fechaEntrada; // Mostrar la fecha original si hay problema
+                              }
+                              
+                              return fecha.toLocaleDateString('es-ES', {
+                                day: 'numeric',
+                                month: 'short'
+                              });
+                            } catch (error) {
+                              return entrada.fechaEntrada; // Mostrar la fecha original si hay error
+                            }
+                          })()}
+                        </span>
+                        {entrada.estadoAnimo && (
+                          <span className="text-lg">
+                            {estadosAnimo.find(e => e.valor === entrada.estadoAnimo)?.emoji}
+                          </span>
+                        )}
+                      </div>
+                      {entrada.titulo && (
+                        <p className="text-xs text-slate-500 truncate">
+                          {entrada.titulo}
+                        </p>
+                      )}
+                    </button>
+                  ))}
                 </div>
               )}
+            </div>
 
-              <form onSubmit={(e) => { e.preventDefault(); guardarEntrada(); }} className="space-y-6">
-                {/* Estado de ánimo */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                    ¿Cómo te sientes hoy?
-                  </label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {estadosAnimo.map((estado) => (
-                      <button
-                        key={estado.valor}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, estadoAnimo: estado.valor })}
-                        className={`p-3 rounded-lg border-2 transition-all ${
-                          formData.estadoAnimo === estado.valor
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900'
-                            : 'border-gray-200 hover:border-gray-300 dark:border-gray-600 dark:hover:border-gray-500'
-                        }`}
-                      >
-                        <div className="text-2xl mb-1">{estado.emoji}</div>
-                        <div className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                          {estado.nombre}
-                        </div>
-                      </button>
-                    ))}
+            {/* Estadísticas rápidas */}
+            {entradas.filter(e => e.fechaEntrada && e.fechaEntrada !== '0001-01-01').length > 0 && (
+              <div className="space-y-3">
+                <h3 className="font-medium text-slate-900 flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  Estadísticas
+                </h3>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-white rounded-lg p-3 border border-slate-200 text-center">
+                    <p className="text-lg font-bold text-slate-900">{entradas.filter(e => e.fechaEntrada && e.fechaEntrada !== '0001-01-01').length}</p>
+                    <p className="text-xs text-slate-500">Entradas</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border border-slate-200 text-center">
+                    <p className="text-lg font-bold text-green-600">
+                      {entradas.filter(e => e.fechaEntrada && e.fechaEntrada !== '0001-01-01' && e.estadoAnimo && e.estadoAnimo >= 4).length}
+                    </p>
+                    <p className="text-xs text-slate-500">Días buenos</p>
                   </div>
                 </div>
 
-                {/* Título */}
-                <div>
-                  <label htmlFor="titulo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Título (opcional)
-                  </label>
-                  <input
-                    type="text"
-                    id="titulo"
-                    value={formData.titulo}
-                    onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    placeholder="Un título para tu día..."
-                  />
-                </div>
-
-                {/* Contenido */}
-                <div>
-                  <label htmlFor="contenido" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    ¿Qué pasó hoy?
-                  </label>
-                  <textarea
-                    id="contenido"
-                    value={formData.contenido}
-                    onChange={(e) => setFormData({ ...formData, contenido: e.target.value })}
-                    rows={8}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    placeholder="Escribe sobre tu día, tus pensamientos, emociones..."
-                  />
-                </div>
-
-                {/* Botones */}
-                <div className="flex justify-end space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFormData({ titulo: '', contenido: '', estadoAnimo: undefined });
-                      setEntradaActual(null);
-                    }}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-transparent rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                  >
-                    Limpiar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-                  >
-                    {isLoading ? 'Guardando...' : 'Guardar entrada'}
-                  </button>
-                </div>
-              </form>
-            </div>
+                <button
+                  onClick={cargarEstadisticas}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                >
+                  <TrendingUp className="w-3 h-3" />
+                  Ver estadísticas completas
+                </button>
+              </div>
+            )}
           </div>
         </div>
-      </div>
+
+        {/* Footer del sidebar */}
+        <div className="p-6 border-t border-slate-200 space-y-2">
+          <button
+            onClick={() => setShowCrearPin(true)}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            <Settings className="w-3 h-3" />
+            Cambiar PIN
+          </button>
+        </div>
+      </aside>
+
+      {/* Contenido principal */}
+      <main className="flex-1 flex flex-col">
+        {/* Header principal */}
+        <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {isMobile && (
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                >
+                  <Menu className="w-5 h-5 text-slate-600" />
+                </button>
+              )}
+              <div>
+                <h1 className="text-xl font-semibold text-slate-900">
+                  {fechaSeleccionada.toLocaleDateString('es-ES', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                  })}
+                </h1>
+                <p className="text-sm text-slate-500">
+                  {entradaActual ? 'Entrada existente' : 'Sin entrada para este día'}
+                </p>
+              </div>
+            </div>
+            
+            {/* Controles del header */}
+            {entradaActual && !isEditing ? (
+              <button
+                onClick={handleEdit}
+                className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-sm"
+              >
+                <Edit3 className="w-4 h-4" />
+                Editar
+              </button>
+            ) : isEditing ? (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={isLoading}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm disabled:opacity-50"
+                >
+                  <Save className="w-4 h-4" />
+                  Guardar
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-sm"
+                >
+                  <X className="w-4 h-4" />
+                  Cancelar
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => {
+                  setIsEditMode(false);
+                  setModalInitialData(null);
+                  setShowCrearModal(true);
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors text-sm"
+              >
+                <Plus className="w-4 h-4" />
+                Crear entrada
+              </button>
+            )}
+          </div>
+        </header>
+
+        {/* Área de contenido */}
+        <div className="flex-1 p-4 sm:p-6">
+          {/* Mensajes */}
+          {successMsg && (
+            <div className="mb-4 p-3 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg">
+              {successMsg}
+            </div>
+          )}
+
+          {error && (
+            <div className="mb-4 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg">
+              {error}
+            </div>
+          )}
+
+          {/* Contenido principal - Editor integrado */}
+          <div className="bg-white rounded-lg border border-slate-200 h-full">
+            {entradaActual ? (
+              <div className="h-full flex flex-col">
+                {isEditing ? (
+                  /* Editor Mode */
+                  <div className="flex-1 p-6 flex flex-col overflow-hidden">
+                    {/* Editor Header */}
+                    <div className="mb-6 space-y-4 shrink-0">
+                      <input
+                        type="text"
+                        value={editTitulo}
+                        onChange={(e) => setEditTitulo(e.target.value)}
+                        placeholder="Título de la entrada..."
+                        className="w-full px-4 py-3 text-xl font-semibold border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      
+                      <div className="flex items-center gap-4">
+                        <label className="text-sm font-medium text-slate-700">Estado de ánimo:</label>
+                        <select
+                          value={editEstadoAnimo || ''}
+                          onChange={(e) => setEditEstadoAnimo(e.target.value ? Number(e.target.value) : undefined)}
+                          className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="">Selecciona...</option>
+                          {estadosAnimo.map((estado) => (
+                            <option key={estado.valor} value={estado.valor}>
+                              {estado.emoji} {estado.nombre}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Editor de contenido */}
+                    <div className="flex-1 overflow-hidden">
+                      <TinyMCEEditor
+                        value={editContenido}
+                        onChange={setEditContenido}
+                        placeholder="Escribe tu entrada del diario..."
+                        height="100%"
+                        disabled={isLoading}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  /* View Mode */
+                  <div className="p-6 overflow-y-auto h-full">
+                    {/* Header de la entrada */}
+                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                      {entradaActual.estadoAnimo && (
+                        <span className="text-2xl">
+                          {estadosAnimo.find(e => e.valor === entradaActual.estadoAnimo)?.emoji}
+                        </span>
+                      )}
+                      <div>
+                        <h2 className="text-2xl font-bold text-slate-900">
+                          {entradaActual.titulo || 'Sin título'}
+                        </h2>
+                        <p className="text-sm text-slate-500">
+                          {entradaActual.estadoAnimo && 
+                            estadosAnimo.find(e => e.valor === entradaActual.estadoAnimo)?.nombre
+                          }
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Contenido de la entrada */}
+                    <div 
+                      className="prose prose-slate max-w-none text-slate-700 leading-relaxed"
+                      dangerouslySetInnerHTML={{ __html: entradaActual.contenido || '' }}
+                    />
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Estado vacío */
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center space-y-4">
+                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
+                    <FileText className="w-8 h-8 text-slate-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-slate-900 mb-2">
+                      No hay entrada para este día
+                    </h3>
+                    <p className="text-slate-500 max-w-md">
+                      Crea una nueva entrada para registrar tus pensamientos y emociones del día
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsEditMode(false);
+                      setModalInitialData(null);
+                      setShowCrearModal(true);
+                    }}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Crear primera entrada
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
 
       {/* Modales */}
-      <CrearPinModal
-        isOpen={showCrearPin}
-        onClose={() => setShowCrearPin(false)}
-        onCreatePin={handleCrearPin}
-      />
+      {!hasPin && (
+        <CrearPinModal
+          isOpen={true}
+          onClose={handleClosePinModal}
+          onCreatePin={handleCrearPin}
+        />
+      )}
 
-      <VerificarPinModal
-        isOpen={showVerificarPin}
-        onClose={() => setShowVerificarPin(false)}
-        onVerifyPin={handleVerificarPin}
+      {hasPin && !isPinAuthenticated && (
+        <VerificarPinModal
+          isOpen={true}
+          onClose={handleClosePinModal}
+          onVerifyPin={handleVerificarPin}
+        />
+      )}
+
+      {showCrearPin && (
+        <CrearPinModal
+          isOpen={true}
+          onClose={() => setShowCrearPin(false)}
+          onCreatePin={handleCrearPin}
+        />
+      )}
+
+      <CrearEntradaDiarioModal
+        isOpen={showCrearModal}
+        onClose={() => setShowCrearModal(false)}
+        onSubmit={async (data) => {
+          await guardarEntrada(data);
+          setShowCrearModal(false);
+        }}
+        isLoading={isLoading}
+        initialData={modalInitialData}
       />
 
       {/* Modal de estadísticas */}
       {showEstadisticas && estadisticas && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4">
-            <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" />
-            <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 dark:bg-gray-800">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Estadísticas del Mes
-              </h3>
+            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setShowEstadisticas(false)} />
+            <div className="relative bg-white rounded-lg border border-slate-200 max-w-2xl w-full p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-slate-900">
+                  Estadísticas del Mes
+                </h3>
+                <button
+                  onClick={() => setShowEstadisticas(false)}
+                  className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                >
+                  <X className="w-4 h-4 text-slate-600" />
+                </button>
+              </div>
               
               <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="p-4 bg-blue-50 rounded-lg dark:bg-blue-900">
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {estadisticas.totalEntradas}
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {(estadisticas as any).totalEntradas}
                   </div>
-                  <div className="text-sm text-blue-600 dark:text-blue-400">
+                  <div className="text-sm text-blue-600">
                     Entradas totales
                   </div>
                 </div>
-                <div className="p-4 bg-green-50 rounded-lg dark:bg-green-900">
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {estadisticas.totalPalabras}
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600">
+                    {(estadisticas as any).totalPalabras}
                   </div>
-                  <div className="text-sm text-green-600 dark:text-green-400">
+                  <div className="text-sm text-green-600">
                     Palabras escritas
                   </div>
                 </div>
               </div>
 
               <div className="space-y-3">
-                <h4 className="font-medium text-gray-900 dark:text-white">Estados de ánimo:</h4>
+                <h4 className="font-medium text-slate-900">Estados de ánimo:</h4>
                 {estadosAnimo.map((estado) => {
-                  const count = estadisticas.porEstadoAnimo[estado.nombre.toLowerCase().replace(' ', '')] || 0;
+                  const count = (estadisticas as any).porEstadoAnimo[estado.nombre.toLowerCase().replace(' ', '')] || 0;
                   return (
-                    <div key={estado.valor} className="flex items-center justify-between">
+                    <div key={estado.valor} className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
                       <div className="flex items-center space-x-2">
                         <span className="text-lg">{estado.emoji}</span>
-                        <span className="text-sm text-gray-700 dark:text-gray-300">{estado.nombre}</span>
+                        <span className="text-sm text-slate-700">{estado.nombre}</span>
                       </div>
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">{count}</span>
+                      <span className="text-sm font-medium text-slate-900">{count}</span>
                     </div>
                   );
                 })}
-              </div>
-
-              <div className="mt-6 flex justify-end">
-                <button
-                  onClick={() => setShowEstadisticas(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-transparent rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                >
-                  Cerrar
-                </button>
               </div>
             </div>
           </div>
@@ -448,4 +778,4 @@ export const Diario: React.FC = () => {
       )}
     </div>
   );
-}; 
+};

@@ -44,12 +44,29 @@ namespace AplicacionNotas.Repositories.Implementations
 
         public async Task<DiarioEntradaDto?> GetEntradaByDateAsync(DateTime fecha, int usuarioId)
         {
+            // LOG: Mostrar la fecha recibida y el usuarioId
+            Console.WriteLine($"[LOG] GetEntradaByDateAsync - Fecha recibida: {fecha:O} (Kind: {fecha.Kind}), UsuarioId: {usuarioId}");
+            
+            // LOG: Mostrar el valor que se enviará al SP
+            Console.WriteLine($"[LOG] GetEntradaByDateAsync - Parámetro enviado al SP: UsuarioId={usuarioId}, FechaEntrada={fecha:yyyy-MM-dd}");
+
             using var connection = _connectionFactory.CreateConnection();
             var entrada = await connection.QueryFirstOrDefaultAsync<DiarioEntradaDto>(
                 "sp_ObtenerEntradaDiarioPorFecha",
                 new { UsuarioId = usuarioId, FechaEntrada = fecha },
                 commandType: CommandType.StoredProcedure
             );
+
+            // LOG: Mostrar si se encontró o no la entrada
+            if (entrada == null)
+            {
+                Console.WriteLine($"[LOG] GetEntradaByDateAsync - No se encontró entrada para UsuarioId={usuarioId}, FechaEntrada={fecha:yyyy-MM-dd}");
+            }
+            else
+            {
+                Console.WriteLine($"[LOG] GetEntradaByDateAsync - Entrada encontrada: Id={entrada.Id}, Fecha={entrada.FechaEntrada:yyyy-MM-dd}");
+            }
+
             if (entrada != null)
             {
                 entrada.EstadoAnimoTexto = entrada.EstadoAnimo switch
@@ -77,8 +94,8 @@ namespace AplicacionNotas.Repositories.Implementations
                     FechaEntrada = entrada.DiaFechaEntrada.ToDateTime(TimeOnly.MinValue),
                     Titulo = entrada.DiaTitulo,
                     Contenido = entrada.DiaContenido,
-                    EstadoAnimo = entrada.DiaEstadoAnimo,
-                    PinHash = entrada.DiaPinHash
+                    EstadoAnimo = entrada.DiaEstadoAnimo
+                    // PinHash eliminado porque el SP no lo espera
                 },
                 commandType: CommandType.StoredProcedure
             );
@@ -95,9 +112,8 @@ namespace AplicacionNotas.Repositories.Implementations
                     Id = entrada.DiaId,
                     Titulo = entrada.DiaTitulo,
                     Contenido = entrada.DiaContenido,
-                    EstadoAnimo = entrada.DiaEstadoAnimo,
-                    PinHash = entrada.DiaPinHash,
-                    FechaEntrada = entrada.DiaFechaEntrada.ToDateTime(TimeOnly.MinValue)
+                    EstadoAnimo = entrada.DiaEstadoAnimo
+                    // PinHash y FechaEntrada eliminados porque el SP no los espera
                 },
                 commandType: CommandType.StoredProcedure
             );

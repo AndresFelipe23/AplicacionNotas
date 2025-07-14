@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { login } from "../services/authService";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Mail, Lock, FileText, Shield, Zap, Users } from "lucide-react";
 import { useUser } from '../contexts/UserContext';
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -18,10 +19,8 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const data = await login(email, password);
-      console.log("Respuesta completa:", data);
       localStorage.setItem("token", data.data.token);
-      setUser(data.data); // <-- Actualiza el contexto correctamente
-      console.log("Usuario guardado:", data.data);
+      setUser(data.data);
       navigate("/home");
     } catch (err: any) {
       setError(err.response?.data?.message || "Error al iniciar sesión");
@@ -31,68 +30,162 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex dark bg-gradient-to-br from-[#181c2b] via-[#232946] to-[#1a1a2e] relative">
-      {/* Flecha a inicio */}
+    <div className="min-h-screen bg-white flex flex-col lg:flex-row">
+      {/* Botón de regreso */}
       <button
         onClick={() => navigate("/")}
-        className="absolute top-6 left-6 z-10 p-2 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-lg text-white transition"
+        className="absolute top-6 left-6 z-20 p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition-all duration-200"
         aria-label="Volver al inicio"
       >
-        <ArrowLeft className="w-6 h-6" />
+        <ArrowLeft className="w-5 h-5" />
       </button>
-      {/* Formulario */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <form
-          onSubmit={handleSubmit}
-          className="w-full max-w-md bg-white/10 dark:bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-10 space-y-8 border border-white/20"
-        >
-          <h2 className="text-3xl font-bold text-center text-white mb-2">Iniciar Sesión</h2>
-          <p className="text-center text-gray-300 mb-6">Bienvenido de nuevo a <span className="font-bold text-blue-400">NotasApp</span></p>
-          {error && <div className="text-red-400 text-center">{error}</div>}
-          <input
-            type="email"
-            placeholder="Correo"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            className="w-full bg-white/20 text-white placeholder-gray-300 border border-white/20 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-            required
-          />
-          <input
-            type="password"
-            placeholder="Contraseña"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            className="w-full bg-white/20 text-white placeholder-gray-300 border border-white/20 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-            required
-          />
-          <button
-            type="submit"
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition"
-            disabled={loading}
-          >
-            {loading ? "Ingresando..." : "Ingresar"}
-          </button>
-          <div className="text-center text-gray-300 mt-4">
-            ¿No tienes cuenta?{' '}
-            <Link to="/register" className="text-blue-400 hover:underline">Regístrate</Link>
+
+      {/* Columna del Formulario */}
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+        <div className="w-full max-w-sm mx-auto">
+          {/* Header */}
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-blue-600 rounded-xl mb-3 sm:mb-4">
+              <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            </div>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Bienvenido</h1>
+            <p className="text-gray-600 text-xs sm:text-sm">Ingresa a <span className="font-semibold text-blue-600">NotasApp</span></p>
           </div>
-        </form>
+
+          {/* Formulario */}
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+            {/* Email */}
+            <div className="relative">
+              <Mail className="w-5 h-5 text-gray-400 absolute left-3 top-3" />
+              <input
+                type="email"
+                placeholder="Correo electrónico"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                required
+              />
+            </div>
+
+            {/* Contraseña */}
+            <div className="relative">
+              <Lock className="w-5 h-5 text-gray-400 absolute left-3 top-3" />
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Contraseña"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                className="w-full pl-10 pr-12 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+
+            {/* Error */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+
+            {/* Botón */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-blue-600 text-white py-2.5 sm:py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 text-sm sm:text-base"
+            >
+              {loading ? "Ingresando..." : "Iniciar Sesión"}
+            </button>
+
+            {/* Enlaces */}
+            <div className="text-center text-xs sm:text-sm">
+              <Link to="/forgot-password" className="text-blue-600 hover:text-blue-500 block mb-2">
+                ¿Olvidaste tu contraseña?
+              </Link>
+              <span className="text-gray-600">
+                ¿No tienes cuenta?{' '}
+                <Link to="/register" className="text-blue-600 hover:text-blue-500 font-semibold">
+                  Regístrate
+                </Link>
+              </span>
+            </div>
+          </form>
+        </div>
       </div>
-      {/* Información/promoción */}
-      <div className="hidden lg:flex flex-1 flex-col justify-center items-center p-12 bg-gradient-to-br from-blue-900/60 via-purple-900/60 to-blue-800/60 backdrop-blur-2xl">
-        <h1 className="text-5xl font-extrabold text-white mb-6 drop-shadow-lg">NotasApp</h1>
-        <p className="text-xl text-blue-100 max-w-md text-center mb-8">
-          Organiza tu vida digital con seguridad, velocidad y estilo. ¡Tus notas y tareas siempre a mano, en cualquier dispositivo!
-        </p>
-        <div className="flex flex-col gap-4 w-full max-w-xs">
-          <div className="bg-white/10 border border-white/20 rounded-xl p-4 text-white text-center shadow-lg">
-            <span className="font-bold text-blue-300">+10K</span> usuarios activos
+
+      {/* Columna de Información */}
+      <div className="hidden lg:flex flex-1 bg-blue-50 p-6 lg:p-8 flex-col justify-center items-center">
+        <div className="max-w-md w-full">
+          {/* Título */}
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">
+              Organiza tu vida digital
+            </h2>
+            <p className="text-gray-600">
+              Únete a más de 50,000 usuarios que confían en NotasApp
+            </p>
           </div>
-          <div className="bg-white/10 border border-white/20 rounded-xl p-4 text-white text-center shadow-lg">
-            <span className="font-bold text-purple-300">+1M</span> notas creadas
+
+          {/* Características */}
+          <div className="space-y-4 mb-8">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Shield className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Seguridad Total</h3>
+                <p className="text-sm text-gray-600">Tus datos protegidos con cifrado</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Zap className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Sincronización Rápida</h3>
+                <p className="text-sm text-gray-600">Acceso desde cualquier dispositivo</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Users className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Colaboración</h3>
+                <p className="text-sm text-gray-600">Comparte y trabaja en equipo</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Estadísticas */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="text-center p-4 bg-white rounded-lg shadow-sm">
+              <div className="text-2xl font-bold text-blue-600">50K+</div>
+              <div className="text-sm text-gray-600">Usuarios</div>
+            </div>
+            <div className="text-center p-4 bg-white rounded-lg shadow-sm">
+              <div className="text-2xl font-bold text-green-600">2M+</div>
+              <div className="text-sm text-gray-600">Notas</div>
+            </div>
+          </div>
+
+          {/* Testimonio */}
+          <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-blue-600">
+            <p className="text-gray-700 text-sm mb-2">
+              "La mejor app de notas que he usado. Simple y poderosa."
+            </p>
+            <div className="text-xs text-gray-500">— Ana García, Diseñadora</div>
           </div>
         </div>
       </div>
     </div>
   );
-} 
+}
