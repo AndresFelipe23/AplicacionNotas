@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, X, Smile, AlertCircle, CheckCircle } from 'lucide-react';
-import { EditorContent, useEditor } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Placeholder from '@tiptap/extension-placeholder';
+import TinyMCEEditor from './TinyMCEEditor';
 
 interface FormularioEntrada {
   titulo: string;
@@ -37,32 +35,12 @@ const CrearEntradaDiarioModal: React.FC<CrearEntradaDiarioModalProps> = ({ isOpe
   const [success, setSuccess] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
-  // Editor Tiptap
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Placeholder.configure({
-        placeholder: 'Escribe tu experiencia, pensamientos o reflexiones...'
-      })
-    ],
-    content: formData.contenido,
-    editable: !isLoading && !success,
-    onUpdate: ({ editor }) => {
-      setFormData(prev => ({ ...prev, contenido: editor.getHTML() }));
-    },
-  });
-
   useEffect(() => {
     if (isOpen && titleInputRef.current) {
       setTimeout(() => {
         titleInputRef.current?.focus();
       }, 100);
     }
-    // Resetear contenido del editor al abrir/cerrar
-    if (editor && isOpen) {
-      editor.commands.setContent(initialData?.contenido || '');
-    }
-    // eslint-disable-next-line
   }, [isOpen]);
 
   useEffect(() => {
@@ -70,9 +48,7 @@ const CrearEntradaDiarioModal: React.FC<CrearEntradaDiarioModalProps> = ({ isOpe
       setFormData({ titulo: '', contenido: '', estadoAnimo: undefined });
       setErrors({});
       setSuccess(false);
-      editor?.commands.clearContent();
     }
-    // eslint-disable-next-line
   }, [isOpen]);
 
   useEffect(() => {
@@ -82,9 +58,6 @@ const CrearEntradaDiarioModal: React.FC<CrearEntradaDiarioModalProps> = ({ isOpe
         contenido: initialData.contenido || '',
         estadoAnimo: initialData.estadoAnimo
       });
-      if (editor) {
-        editor.commands.setContent(initialData.contenido || '');
-      }
     }
   }, [isOpen, initialData]);
 
@@ -96,9 +69,9 @@ const CrearEntradaDiarioModal: React.FC<CrearEntradaDiarioModalProps> = ({ isOpe
     if (formData.titulo.length > 100) {
       newErrors.titulo = 'El título no puede exceder 100 caracteres';
     }
-    // Validar contenido HTML (sin etiquetas vacías)
-    const plainText = editor?.getText() || '';
-    if (!plainText.trim()) {
+    // Extraer texto plano de TinyMCE (eliminar etiquetas HTML)
+    const plainText = formData.contenido ? formData.contenido.replace(/<[^>]+>/g, '').trim() : '';
+    if (!plainText) {
       newErrors.contenido = 'El contenido es obligatorio';
     }
     if (plainText.length > 1000) {
@@ -237,27 +210,23 @@ const CrearEntradaDiarioModal: React.FC<CrearEntradaDiarioModalProps> = ({ isOpe
               </div>
             </div>
 
-            {/* Contenido con Tiptap */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                ¿Qué sucedió hoy? *
+            {/* Campo de contenido */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-slate-700 mb-2" htmlFor="contenido">
+                Contenido <span className="text-red-500">*</span>
               </label>
-              <div className={`border rounded-2xl transition-all ${errors.contenido ? 'border-red-300 bg-red-50' : 'border-slate-200'} focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500`}
-                style={{ minHeight: 120 }}
-              >
-                <EditorContent editor={editor} className="p-3 min-h-[100px] outline-none" />
-              </div>
-              <div className="flex justify-between items-center mt-1">
-                {errors.contenido ? (
-                  <p className="text-sm text-red-600 flex items-center gap-1">
-                    <AlertCircle className="w-4 h-4" />
-                    {errors.contenido}
-                  </p>
-                ) : (
-                  <span className="text-xs text-slate-500">Comparte lo más importante de tu día</span>
-                )}
-                <span className="text-xs text-slate-400">{(editor?.getText().length || 0)}/1000</span>
-              </div>
+              <textarea
+                id="contenido"
+                value={formData.contenido}
+                onChange={e => handleChange('contenido', e.target.value)}
+                placeholder="Escribe tu experiencia, pensamientos o reflexiones..."
+                className="w-full min-h-[120px] max-h-[300px] p-3 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder-slate-400 resize-vertical"
+                maxLength={1000}
+                disabled={isLoading || success}
+              />
+              {errors.contenido && (
+                <p className="text-xs text-red-600 mt-1">{errors.contenido}</p>
+              )}
             </div>
 
             {/* Estado de ánimo */}
@@ -294,9 +263,7 @@ const CrearEntradaDiarioModal: React.FC<CrearEntradaDiarioModalProps> = ({ isOpe
               </button>
               <motion.button
                 type="submit"
-                disabled={isLoading || !formData.titulo.trim() || !editor?.getText().trim() || success}
-                whileHover={!isLoading && formData.titulo.trim() && editor?.getText().trim() && !success ? { scale: 1.02 } : {}}
-                whileTap={!isLoading && formData.titulo.trim() && editor?.getText().trim() && !success ? { scale: 0.98 } : {}}
+                disabled={isLoading || !formData.titulo.trim() || !formData.contenido || !formData.contenido.replace(/<[^>]+>/g, '').trim() || success}
                 className="flex-1 px-6 py-3 rounded-2xl font-medium flex items-center justify-center gap-2 bg-blue-600 text-white hover:bg-blue-700 transition-all"
               >
                 {isLoading ? (

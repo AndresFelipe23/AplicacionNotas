@@ -54,8 +54,8 @@ export const Diario: React.FC = () => {
 
   // Obtener mes y año actuales
   const today = new Date();
-  const [mes] = useState(today.getMonth() + 1);
-  const [año] = useState(today.getFullYear());
+  const [mes, setMes] = useState(today.getMonth() + 1);
+  const [año, setAño] = useState(today.getFullYear());
 
   const estadosAnimo = [
     { valor: 1, nombre: "Muy mal", emoji: "😢", color: "#EF4444" },
@@ -155,7 +155,7 @@ export const Diario: React.FC = () => {
         nueva = await diarioService.crearEntrada({
           ...formData,
           fechaEntrada: fechaSeleccionada.toISOString().split('T')[0],
-        } as CrearEntradaDiario & { fechaEntrada: string });
+        });
         setEntradas([nueva, ...entradas]);
         setEntradaActual(nueva);
       }
@@ -285,6 +285,9 @@ export const Diario: React.FC = () => {
     );
   }
 
+  // Log de depuración para ver las entradas que llegan del backend
+  console.log('Entradas:', entradas);
+
   return (
     <div className="h-full bg-white flex">
       {/* Overlay móvil */}
@@ -359,6 +362,28 @@ export const Diario: React.FC = () => {
             </div>
 
             {/* Entradas del mes */}
+            <div className="mb-4 flex gap-2 items-center">
+              <select
+                className="border border-slate-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                value={mes}
+                onChange={e => setMes(Number(e.target.value))}
+              >
+                {[...Array(12)].map((_, i) => (
+                  <option key={i + 1} value={i + 1}>
+                    {new Date(0, i).toLocaleString('es-ES', { month: 'long' })}
+                  </option>
+                ))}
+              </select>
+              <select
+                className="border border-slate-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                value={año}
+                onChange={e => setAño(Number(e.target.value))}
+              >
+                {Array.from({ length: 6 }, (_, i) => today.getFullYear() - 3 + i).map(y => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
             <div className="space-y-3">
               <h3 className="font-medium text-slate-900 flex items-center gap-2">
                 <Edit3 className="w-4 h-4" />
@@ -381,65 +406,66 @@ export const Diario: React.FC = () => {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {entradas.map((entrada) => (
-                    <button
-                      key={entrada.fechaEntrada}
-                      className={`w-full text-left p-3 rounded-lg border transition-all ${
-                        fechaSeleccionada.toISOString().split('T')[0] === entrada.fechaEntrada
-                          ? 'bg-blue-50 border-blue-200 text-blue-700'
-                          : 'bg-white border-slate-200 hover:bg-slate-50'
-                      }`}
-                      onClick={() => {
-                        try {
-                          // Crear fecha correctamente desde string YYYY-MM-DD
-                          const [year, month, day] = entrada.fechaEntrada.split('-');
-                          const fecha = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-                          
-                          // Verificar que la fecha es válida antes de seleccionar
-                          if (!isNaN(fecha.getTime())) {
-                            setFechaSeleccionada(fecha);
-                            if (isMobile) setSidebarOpen(false);
-                          }
-                        } catch (error) {
-                          console.error('Error al seleccionar fecha:', error);
-                        }
-                      }}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium">
-                          {(() => {
-                            try {
-                              // Crear fecha correctamente desde string YYYY-MM-DD
-                              const [year, month, day] = entrada.fechaEntrada.split('-');
-                              const fecha = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-                              
-                              // Verificar que la fecha es válida
-                              if (isNaN(fecha.getTime())) {
-                                return entrada.fechaEntrada; // Mostrar la fecha original si hay problema
-                              }
-                              
-                              return fecha.toLocaleDateString('es-ES', {
-                                day: 'numeric',
-                                month: 'short'
-                              });
-                            } catch (error) {
-                              return entrada.fechaEntrada; // Mostrar la fecha original si hay error
+                  {entradas
+                    .filter(e => e.fechaEntrada && e.fechaEntrada !== '0001-01-01' && e.fechaEntrada !== '0001-01-01T00:00:00')
+                    .map((entrada) => (
+                      <button
+                        key={entrada.fechaEntrada}
+                        className={`w-full text-left p-3 rounded-lg border transition-all ${
+                          fechaSeleccionada.toISOString().split('T')[0] === entrada.fechaEntrada.split('T')[0]
+                            ? 'bg-blue-50 border-blue-200 text-blue-700'
+                            : 'bg-white border-slate-200 hover:bg-slate-50'
+                        }`}
+                        onClick={() => {
+                          try {
+                            // Crear fecha correctamente desde string YYYY-MM-DD o YYYY-MM-DDTHH:mm:ss
+                            const [datePart] = entrada.fechaEntrada.split('T');
+                            const [year, month, day] = datePart.split('-');
+                            const fecha = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                            // Verificar que la fecha es válida antes de seleccionar
+                            if (!isNaN(fecha.getTime())) {
+                              setFechaSeleccionada(fecha);
+                              if (isMobile) setSidebarOpen(false);
                             }
-                          })()}
-                        </span>
-                        {entrada.estadoAnimo && (
-                          <span className="text-lg">
-                            {estadosAnimo.find(e => e.valor === entrada.estadoAnimo)?.emoji}
+                          } catch (error) {
+                            console.error('Error al seleccionar fecha:', error);
+                          }
+                        }}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium">
+                            {(() => {
+                              try {
+                                // Crear fecha correctamente desde string YYYY-MM-DD o YYYY-MM-DDTHH:mm:ss
+                                const [datePart] = entrada.fechaEntrada.split('T');
+                                const [year, month, day] = datePart.split('-');
+                                const fecha = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                                // Verificar que la fecha es válida
+                                if (isNaN(fecha.getTime())) {
+                                  return entrada.fechaEntrada; // Mostrar la fecha original si hay problema
+                                }
+                                return fecha.toLocaleDateString('es-ES', {
+                                  day: 'numeric',
+                                  month: 'short'
+                                });
+                              } catch (error) {
+                                return entrada.fechaEntrada; // Mostrar la fecha original si hay error
+                              }
+                            })()}
                           </span>
+                          {entrada.estadoAnimo && (
+                            <span className="text-lg">
+                              {estadosAnimo.find(e => e.valor === entrada.estadoAnimo)?.emoji}
+                            </span>
+                          )}
+                        </div>
+                        {entrada.titulo && (
+                          <p className="text-xs text-slate-500 truncate">
+                            {entrada.titulo}
+                          </p>
                         )}
-                      </div>
-                      {entrada.titulo && (
-                        <p className="text-xs text-slate-500 truncate">
-                          {entrada.titulo}
-                        </p>
-                      )}
-                    </button>
-                  ))}
+                      </button>
+                    ))}
                 </div>
               )}
             </div>

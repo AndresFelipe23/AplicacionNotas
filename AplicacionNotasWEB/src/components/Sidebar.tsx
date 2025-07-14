@@ -1,7 +1,6 @@
 import { BookOpen, CheckSquare, Settings, LogOut, Menu, X, Home, Plus, Trash2, ChevronRight, Calendar } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
-import { useTheme, colorSchemes } from '../contexts/ThemeContext';
 import { useState, useEffect } from 'react';
 import { papeleraService } from '../services/papeleraService';
 import { usePapelera } from '../contexts/PapeleraContext';
@@ -35,17 +34,18 @@ export default function Sidebar({
   sidebarOpen, 
   setSidebarOpen, 
   sidebarMinimized, 
-  setSidebarMinimized 
+  setSidebarMinimized,
+  forceBlueSidebar
 }: { 
   sidebarOpen: boolean;
   setSidebarOpen: (v: boolean) => void;
   sidebarMinimized: boolean;
   setSidebarMinimized: (v: boolean) => void;
+  forceBlueSidebar?: boolean;
 }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useUser();
-  const { theme, getSidebarClasses } = useTheme();
   const [isMobile, setIsMobile] = useState(false);
   const { contador, actualizarContador } = usePapelera();
 
@@ -103,55 +103,6 @@ export default function Sidebar({
     }
   };
 
-  // Función para obtener las clases de texto según el color del sidebar
-  const getTextClasses = () => {
-    const sidebarColor = theme.sidebarColor;
-    const isDarkMode = theme.mode === 'dark' || (theme.mode === 'auto' && document.documentElement.classList.contains('dark'));
-    
-    if (sidebarColor === 'auto') {
-      return isDarkMode ? 'text-white' : 'text-slate-900';
-    } else if (sidebarColor === 'white') {
-      return 'text-slate-900';
-    } else if (sidebarColor === 'black') {
-      return 'text-white';
-    } else {
-      // Para colores de tema (azul, púrpura, verde, etc.) siempre usar texto blanco
-      return 'text-white';
-    }
-  };
-
-  // Función para obtener las clases de hover según el color del sidebar
-  const getHoverClasses = () => {
-    const sidebarColor = theme.sidebarColor;
-    const isDarkMode = theme.mode === 'dark' || (theme.mode === 'auto' && document.documentElement.classList.contains('dark'));
-    
-    if (sidebarColor === 'auto') {
-      return isDarkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100';
-    } else if (sidebarColor === 'white') {
-      return 'hover:bg-slate-100';
-    } else if (sidebarColor === 'black') {
-      return 'hover:bg-white/10';
-    } else {
-      return 'hover:bg-white/10'; // Para colores de tema
-    }
-  };
-
-  // Función para obtener las clases de borde según el color del sidebar
-  const getBorderClasses = () => {
-    const sidebarColor = theme.sidebarColor;
-    const isDarkMode = theme.mode === 'dark' || (theme.mode === 'auto' && document.documentElement.classList.contains('dark'));
-    
-    if (sidebarColor === 'auto') {
-      return isDarkMode ? 'border-slate-700' : 'border-slate-200';
-    } else if (sidebarColor === 'white') {
-      return 'border-slate-200';
-    } else if (sidebarColor === 'black') {
-      return 'border-slate-700';
-    } else {
-      return 'border-slate-700'; // Para colores de tema
-    }
-  };
-
   return (
     <>
       {/* Overlay para móvil */}
@@ -173,8 +124,8 @@ export default function Sidebar({
           }
           ${sidebarMinimized && !isMobile ? 'w-16' : 'w-72'}
           overflow-x-hidden
-          ${getSidebarClasses()}
-          ${getBorderClasses()}
+          bg-blue-600
+          border-slate-700
         `}
       >
         {/* Header */}
@@ -184,7 +135,7 @@ export default function Sidebar({
               <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
                 <BookOpen className="w-4 h-4 text-white" />
               </div>
-              <span className={`text-lg font-semibold ${getTextClasses()}`}>NotasApp</span>
+              <span className="text-lg font-semibold text-white">NexusNote</span>
             </div>
           )}
           {/* Botones de control */}
@@ -193,19 +144,19 @@ export default function Sidebar({
             {!isMobile && (
               <button
                 onClick={() => setSidebarMinimized(!sidebarMinimized)}
-                className={`p-2 rounded-lg ${getHoverClasses()} transition-colors`}
+                className="p-2 rounded-lg hover:bg-white/10 transition-colors"
                 title={sidebarMinimized ? 'Expandir sidebar' : 'Minimizar sidebar'}
               >
-                <Menu className={`w-4 h-4 ${getTextClasses()}`} />
+                <Menu className="w-4 h-4 text-white" />
               </button>
             )}
             {/* Botón cerrar (solo móvil) */}
             {isMobile && (
               <button
                 onClick={() => setSidebarOpen(false)}
-                className={`p-2 rounded-lg ${getHoverClasses()} transition-colors`}
+                className="p-2 rounded-lg hover:bg-white/10 transition-colors"
               >
-                <X className={`w-4 h-4 ${getTextClasses()}`} />
+                <X className="w-4 h-4 text-white" />
               </button>
             )}
           </div>
@@ -216,15 +167,15 @@ export default function Sidebar({
           <div className={`p-4 ${sidebarMinimized && !isMobile ? 'hidden' : ''}`}>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                <span className={`text-sm font-medium ${getTextClasses()}`}>
+                <span className="text-sm font-medium text-white">
                   {user.nombre?.[0]}{user.apellido?.[0]}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className={`text-sm font-medium ${getTextClasses()} truncate`}>
+                <p className="text-sm font-medium text-white truncate">
                   {user.nombre} {user.apellido}
                 </p>
-                <p className={`text-xs ${theme.sidebarColor === 'white' ? 'text-slate-900' : 'text-white'} truncate`}>
+                <p className="text-xs text-white truncate">
                   {user.email || 'Usuario'}
                 </p>
               </div>
@@ -237,20 +188,6 @@ export default function Sidebar({
           <nav className={`flex-1 ${sidebarMinimized && !isMobile ? 'p-2' : 'p-4'} space-y-1`}>
             {menu.map(item => {
               const selected = location.pathname === item.to;
-              // Determinar clases para el item seleccionado según color del sidebar
-              let selectedBg = '';
-              let selectedText = '';
-              // Usar getTextClasses para todos los casos
-              if (theme.sidebarColor === 'white') {
-                selectedBg = 'bg-slate-100';
-                selectedText = 'text-slate-900';
-              } else if (theme.sidebarColor === 'auto' && !(theme.mode === 'dark' || (theme.mode === 'auto' && document.documentElement.classList.contains('dark')))) {
-                selectedBg = 'bg-slate-100';
-                selectedText = 'text-slate-900';
-              } else {
-                selectedBg = 'bg-white/20';
-                selectedText = 'text-white';
-              }
               return (
                 <Link
                   key={item.name}
@@ -259,20 +196,18 @@ export default function Sidebar({
                   className={`
                     group relative flex items-center gap-3 ${sidebarMinimized && !isMobile ? 'px-2 py-2.5' : 'px-3 py-2.5'} rounded-xl
                     transition-all duration-200 font-medium
-                    ${selected 
-                      ? `${selectedBg} ${selectedText} shadow-sm` 
-                      : `${getTextClasses()} ${getHoverClasses()} hover:text-white`
-                    }
+                    text-white hover:bg-blue-700 hover:text-white
+                    ${selected ? 'bg-white/20 text-white shadow-sm' : ''}
                     ${sidebarMinimized && !isMobile ? 'justify-center' : ''}
                   `}
                   title={sidebarMinimized && !isMobile ? item.name : ''}
                 >
-                  <item.icon className={`shrink-0 ${sidebarMinimized && !isMobile ? 'w-6 h-6' : 'w-5 h-5'} ${selected ? selectedText : (theme.sidebarColor === 'white' ? 'text-slate-900' : 'text-white')}`} />
+                  <item.icon className={`shrink-0 ${sidebarMinimized && !isMobile ? 'w-6 h-6' : 'w-5 h-5'} text-white`} />
                   {(!sidebarMinimized || isMobile) && (
-                    <span className={`truncate ${selected ? selectedText : (theme.sidebarColor === 'white' ? 'text-slate-900' : 'text-white')}`}>{item.name}</span>
+                    <span className="truncate text-white">{item.name}</span>
                   )}
                   {(!sidebarMinimized || isMobile) && selected && (
-                    <ChevronRight className={`w-4 h-4 ml-auto ${selectedText}`} />
+                    <ChevronRight className="w-4 h-4 ml-auto text-white" />
                   )}
                   {/* Tooltip para modo minimizado */}
                   {sidebarMinimized && !isMobile && (
@@ -289,7 +224,7 @@ export default function Sidebar({
           <div className={`${sidebarMinimized && !isMobile ? 'p-2' : 'p-4'}`}>
             {(!sidebarMinimized || isMobile) && (
               <div className="mb-3">
-                <span className={`text-xs font-medium ${theme.sidebarColor === 'white' ? 'text-slate-900' : 'text-white'} uppercase tracking-wide`}>
+                <span className="text-xs font-medium text-white uppercase tracking-wide">
                   Acciones rápidas
                 </span>
               </div>
@@ -301,7 +236,7 @@ export default function Sidebar({
                   onClick={() => handleOpcionClick(opcion)}
                   className={`
                     group relative w-full flex items-center gap-3 ${sidebarMinimized && !isMobile ? 'px-2 py-2' : 'px-3 py-2'} rounded-lg
-                    ${theme.sidebarColor === 'white' ? 'text-slate-900 hover:text-slate-700' : 'text-white hover:text-white'} ${getHoverClasses()}
+                    text-white hover:text-white hover:bg-white/10
                     transition-all duration-200 font-medium
                     ${sidebarMinimized && !isMobile ? 'justify-center' : ''}
                   `}
@@ -335,7 +270,7 @@ export default function Sidebar({
               onClick={handleLogout}
               className={`
                 group relative w-full flex items-center gap-3 ${sidebarMinimized && !isMobile ? 'px-2 py-2' : 'px-3 py-2'} rounded-lg
-                bg-red-600 text-white hover:bg-red-700 transition-all duration-200 font-medium
+                bg-blue-800 text-white hover:bg-blue-900 transition-all duration-200 font-medium
                 ${sidebarMinimized && !isMobile ? 'justify-center' : ''}
               `}
               title={sidebarMinimized && !isMobile ? 'Cerrar sesión' : ''}

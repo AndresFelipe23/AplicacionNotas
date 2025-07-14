@@ -1,14 +1,12 @@
 import Sidebar from '../components/Sidebar';
 import { type ReactNode, useState, useEffect } from 'react';
 import { Menu } from 'lucide-react';
-import { useTheme } from '../contexts/ThemeContext';
 import { useLocation } from 'react-router-dom';
 
 export default function SidebarOnlyLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarMinimized, setSidebarMinimized] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const { theme } = useTheme();
   const location = useLocation();
 
   // Verificar si estamos en una ruta que tiene su propio sidebar
@@ -41,6 +39,7 @@ export default function SidebarOnlyLayout({ children }: { children: ReactNode })
           setSidebarOpen={setSidebarOpen}
           sidebarMinimized={sidebarMinimized}
           setSidebarMinimized={setSidebarMinimized}
+          forceBlueSidebar={true}
         />
       )}
 
@@ -50,32 +49,33 @@ export default function SidebarOnlyLayout({ children }: { children: ReactNode })
           setSidebarOpen={setSidebarOpen}
           sidebarMinimized={sidebarMinimized}
           setSidebarMinimized={setSidebarMinimized}
+          forceBlueSidebar={true}
         />
       )}
 
       {/* Main Content Area - Ocupa todo el espacio restante */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden bg-white">
         {/* Header móvil - Solo aparece en móvil */}
         {isMobile && (
-          <header className="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 shrink-0 z-30">
+          <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 shrink-0 z-30">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+              className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
             >
-              <Menu className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+              <Menu className="w-5 h-5 text-slate-600" />
             </button>
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 bg-gradient-to-br from-blue-600 to-blue-700 rounded-md flex items-center justify-center">
                 <span className="text-xs font-bold text-white">N</span>
               </div>
-              <span className="text-lg font-semibold text-slate-900 dark:text-white">NotasApp</span>
+              <span className="text-lg font-semibold text-white">NexusNote</span>
             </div>
             <div className="w-9"></div>
           </header>
         )}
         
         {/* Contenido principal - Ocupa toda la altura restante */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden bg-white">
           {children}
         </div>
       </div>

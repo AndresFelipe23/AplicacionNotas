@@ -22,7 +22,7 @@ namespace AplicacionNotas.Repositories.Implementations
             using var connection = _connectionFactory.CreateConnection();
             var entradas = await connection.QueryAsync<DiarioEntradaDto>(
                 "sp_ObtenerEntradasDiarioPorUsuario",
-                new { UsuarioId = usuarioId },
+                new { UsuarioId = usuarioId, Mes = mes, Año = año },
                 commandType: CommandType.StoredProcedure
             );
             // Mapear estado de ánimo a texto y requiere PIN

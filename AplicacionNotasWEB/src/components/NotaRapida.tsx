@@ -153,7 +153,7 @@ const NotaRapida: React.FC = () => {
       <motion.div
         ref={containerRef}
         layout
-        className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden"
+        className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
         whileHover={{ shadow: "0 10px 25px -3px rgba(0, 0, 0, 0.1)" }}
         transition={{ duration: 0.2 }}
       >
@@ -169,17 +169,17 @@ const NotaRapida: React.FC = () => {
               onClick={handleExpand}
             >
               <div className="flex items-center gap-6 mb-6">
-                <div className="w-14 h-14 bg-slate-100 dark:bg-slate-700 rounded-xl flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
-                  <Sparkles className="w-7 h-7 text-slate-600 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
+                <div className="w-14 h-14 bg-slate-100 rounded-xl flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                  <Sparkles className="w-7 h-7 text-slate-600 group-hover:text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Nota Rápida</h3>
-                  <p className="text-slate-500 dark:text-slate-400">Captura tus ideas al instante</p>
+                  <h3 className="text-xl font-semibold text-slate-900">Nota Rápida</h3>
+                  <p className="text-slate-500">Captura tus ideas al instante</p>
                 </div>
               </div>
               
-              <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-8 border border-slate-100 dark:border-slate-600 group-hover:border-blue-200 dark:group-hover:border-blue-500 group-hover:bg-blue-50/50 dark:group-hover:bg-blue-900/20 transition-all min-h-32">
-                <p className="text-slate-400 dark:text-slate-500 text-center text-lg">
+              <div className="bg-slate-50 rounded-xl p-8 border border-slate-100 group-hover:border-blue-200 group-hover:bg-blue-50/50 transition-all min-h-32">
+                <p className="text-slate-400 text-center text-lg">
                   Haz clic para empezar a escribir...
                 </p>
               </div>
@@ -192,18 +192,18 @@ const NotaRapida: React.FC = () => {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 300 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className="divide-y divide-slate-100 dark:divide-slate-700"
+              className="divide-y divide-slate-100"
             >
               {/* Header con acciones */}
-              <div className="p-6 bg-slate-50/50 dark:bg-slate-700/30">
+              <div className="p-6 bg-slate-50/50">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setFavorito(!favorito)}
                       className={`p-3 rounded-lg transition-colors ${
                         favorito 
-                          ? 'text-amber-500 bg-amber-50 dark:bg-amber-900/30' 
-                          : 'text-slate-400 dark:text-slate-500 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30'
+                          ? 'text-amber-500 bg-amber-50' 
+                          : 'text-slate-400 hover:text-amber-500 hover:bg-amber-50'
                       }`}
                     >
                       <Star className={`w-5 h-5 ${favorito ? 'fill-current' : ''}`} />
@@ -214,11 +214,11 @@ const NotaRapida: React.FC = () => {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         className={`flex items-center gap-2 ${
-                          loading ? 'text-blue-600 dark:text-blue-400' : 'text-green-600 dark:text-green-400'
+                          loading ? 'text-blue-600' : 'text-green-600'
                         }`}
                       >
                         {loading ? (
-                          <div className="w-4 h-4 border-2 border-blue-600 dark:border-blue-400 border-t-transparent rounded-full animate-spin" />
+                          <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                         ) : (
                           <Check className="w-4 h-4" />
                         )}
@@ -233,8 +233,8 @@ const NotaRapida: React.FC = () => {
                       disabled={!canSave}
                       className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
                         canSave
-                          ? 'bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 shadow-sm hover:shadow-md'
-                          : 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                          ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-md'
+                          : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                       }`}
                     >
                       {loading ? (
@@ -248,7 +248,7 @@ const NotaRapida: React.FC = () => {
                     <button
                       onClick={handleCollapse}
                       disabled={loading}
-                      className="p-3 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                      className="p-3 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -262,7 +262,7 @@ const NotaRapida: React.FC = () => {
                     return (
                       <button
                         key={opt.style}
-                        className="p-3 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-600 rounded-lg transition-all"
+                        className="p-3 text-slate-500 hover:text-slate-700 hover:bg-white rounded-lg transition-all"
                         onMouseDown={e => { e.preventDefault(); handleToolbarClick(opt.style, !!opt.block); }}
                         title={opt.label}
                       >
@@ -299,7 +299,7 @@ const NotaRapida: React.FC = () => {
                   type="text"
                   value={titulo}
                   onChange={e => setTitulo(e.target.value)}
-                  className="w-full text-2xl font-semibold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 bg-transparent border-none outline-none focus:ring-0"
+                  className="w-full text-2xl font-semibold text-slate-900 placeholder-slate-400 bg-transparent border-none outline-none focus:ring-0"
                   placeholder="Título de tu nota..."
                   disabled={loading}
                 />
@@ -314,13 +314,13 @@ const NotaRapida: React.FC = () => {
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.8 }}
-                          className="group inline-flex items-center gap-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full px-4 py-2"
+                          className="group inline-flex items-center gap-2 bg-blue-100 text-blue-700 rounded-full px-4 py-2"
                         >
                           <Hash className="w-4 h-4" />
                           <span>{etiqueta}</span>
                           <button
                             onClick={() => handleEliminarEtiqueta(i)}
-                            className="opacity-0 group-hover:opacity-100 text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-all"
+                            className="opacity-0 group-hover:opacity-100 text-blue-500 hover:text-blue-700 transition-all"
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -337,7 +337,7 @@ const NotaRapida: React.FC = () => {
                         onChange={(e) => setNuevaEtiqueta(e.target.value)}
                         onKeyDown={handleEtiquetaKeyPress}
                         onBlur={handleAgregarEtiqueta}
-                        className="bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full px-4 py-2 border border-blue-200 dark:border-blue-700 focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 min-w-32"
+                        className="bg-blue-50 text-blue-700 rounded-full px-4 py-2 border border-blue-200 focus:outline-none focus:border-blue-400 min-w-32"
                         placeholder="Nueva etiqueta..."
                         autoFocus
                         maxLength={30}
@@ -346,7 +346,7 @@ const NotaRapida: React.FC = () => {
                       etiquetas.length < 5 && (
                         <button
                           onClick={() => setMostrarInputEtiqueta(true)}
-                          className="inline-flex items-center gap-2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full px-4 py-2 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                          className="inline-flex items-center gap-2 bg-slate-100 text-slate-600 rounded-full px-4 py-2 hover:bg-slate-200 transition-colors"
                         >
                           <Plus className="w-4 h-4" />
                           <span>Agregar etiqueta</span>
@@ -356,13 +356,13 @@ const NotaRapida: React.FC = () => {
                   </div>
                   
                   {etiquetas.length >= 5 && (
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Máximo 5 etiquetas</p>
+                    <p className="text-sm text-slate-500">Máximo 5 etiquetas</p>
                   )}
                 </div>
 
                 {/* Editor */}
                 <div 
-                  className="min-h-64 cursor-text text-slate-700 dark:text-slate-300 text-lg leading-relaxed bg-slate-50/50 dark:bg-slate-700/30 rounded-lg p-6 border border-slate-100 dark:border-slate-600 focus-within:border-blue-200 dark:focus-within:border-blue-500 focus-within:bg-white dark:focus-within:bg-slate-700 transition-all"
+                  className="min-h-64 cursor-text text-slate-700 text-lg leading-relaxed bg-slate-50/50 rounded-lg p-6 border border-slate-100 focus-within:border-blue-200 focus-within:bg-white transition-all"
                   onClick={() => editorRef.current?.focus()}
                 >
                   <Editor

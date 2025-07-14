@@ -128,8 +128,8 @@ export const VerificarPinModal: React.FC<VerificarPinModalProps> = ({
   if (showForgotPin) {
     return (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 dark:bg-gray-800 p-8 text-center">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Restablecer PIN del Diario</h3>
+        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 p-8 text-center">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Restablecer PIN del Diario</h3>
           {showCrearPin ? (
             <CrearPinModal
               isOpen={true}
@@ -148,12 +148,12 @@ export const VerificarPinModal: React.FC<VerificarPinModalProps> = ({
             </div>
           ) : !passwordSuccess ? (
             <form onSubmit={handleVerifyPassword} className="space-y-4">
-              <p className="text-gray-700 dark:text-gray-300 mb-2">Para restablecer tu PIN, primero verifica tu contraseña de usuario.</p>
+              <p className="text-gray-700 mb-2">Para restablecer tu PIN, primero verifica tu contraseña de usuario.</p>
               <input
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Contraseña"
                 required
                 disabled={isVerifyingPassword}
@@ -196,17 +196,17 @@ export const VerificarPinModal: React.FC<VerificarPinModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 dark:bg-gray-800">
-        <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-gray-700">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
+        <div className="flex items-center justify-between p-6 border-b border-slate-100">
           <div className="flex items-center space-x-3">
-            <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg dark:bg-blue-900">
-              <Lock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg">
+              <Lock className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-gray-900">
                 Verificar PIN del Diario
               </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-gray-500">
                 Ingresa tu PIN para acceder al diario
               </p>
             </div>
@@ -214,14 +214,14 @@ export const VerificarPinModal: React.FC<VerificarPinModalProps> = ({
           <button
             onClick={handleClose}
             disabled={isLoading}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50"
+            className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
           >
             <X className="w-6 h-6" />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4 p-6">
           <div>
-            <label htmlFor="pin" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="pin" className="block text-sm font-medium text-gray-700 mb-2">
               PIN
             </label>
             <input
@@ -229,7 +229,7 @@ export const VerificarPinModal: React.FC<VerificarPinModalProps> = ({
               id="pin"
               value={pin}
               onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="1234"
               maxLength={8}
               disabled={isLoading}
@@ -238,7 +238,7 @@ export const VerificarPinModal: React.FC<VerificarPinModalProps> = ({
             />
           </div>
           {error && (
-            <div className="p-3 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-900 dark:text-red-200">
+            <div className="p-3 text-sm text-red-700 bg-red-100 rounded-lg">
               {error}
             </div>
           )}
@@ -247,7 +247,7 @@ export const VerificarPinModal: React.FC<VerificarPinModalProps> = ({
               type="button"
               onClick={handleClose}
               disabled={isLoading}
-              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-transparent rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 disabled:opacity-50"
+              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-transparent rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50"
             >
               Cancelar
             </button>
@@ -256,7 +256,7 @@ export const VerificarPinModal: React.FC<VerificarPinModalProps> = ({
               disabled={isLoading || pin.length < 4}
               className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Verificando...' : 'Verificar PIN'}
+              {isLoading ? 'Verificando...' : 'Verificar'}
             </button>
           </div>
           <div className="pt-4 text-center">

@@ -185,7 +185,7 @@ const LandingPage = () => {
               <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
                 <BookOpen className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-slate-900">NotasApp</span>
+              <span className="text-xl font-bold text-slate-900">NexusNote</span>
             </div>
 
             {/* Desktop Navigation */}
@@ -285,7 +285,7 @@ const LandingPage = () => {
               </h1>
               
               <p className="text-xl md:text-2xl text-slate-600 mb-12 max-w-4xl mx-auto leading-relaxed">
-                NotasApp es la plataforma completa y gratuita para gestionar notas, carpetas, tareas, 
+                NexusNote es la plataforma completa y gratuita para gestionar notas, carpetas, tareas, 
                 calendario y diario personal. Todo en un solo lugar, sin costo alguno.
               </p>
             </motion.div>
@@ -475,7 +475,7 @@ const LandingPage = () => {
             className="text-center mb-16"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">
-              ¿Por qué elegir NotasApp?
+              ¿Por qué elegir NexusNote?
             </h2>
             <p className="text-xl text-slate-600 max-w-2xl mx-auto">
               Una alternativa gratuita y completa a las aplicaciones de pago
@@ -562,7 +562,7 @@ const LandingPage = () => {
               Lo que dicen nuestros usuarios
             </h2>
             <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-              Miles de personas ya organizan su vida con NotasApp
+              Miles de personas ya organizan su vida con NexusNote
             </p>
           </motion.div>
 
@@ -609,7 +609,7 @@ const LandingPage = () => {
               Preguntas Frecuentes
             </h2>
             <p className="text-xl text-slate-600">
-              Todo lo que necesitas saber sobre NotasApp
+              Todo lo que necesitas saber sobre NexusNote
             </p>
           </motion.div>
 
@@ -617,11 +617,11 @@ const LandingPage = () => {
             {[
               {
                 question: "¿Es realmente gratis para siempre?",
-                answer: "Sí, NotasApp es completamente gratuita. No hay planes de pago, no hay límites artificiales y no hay funciones premium. Creemos que las herramientas de organización personal deben ser accesibles para todos."
+                answer: "Sí, NexusNote es completamente gratuita. No hay planes de pago, no hay límites artificiales y no hay funciones premium. Creemos que las herramientas de organización personal deben ser accesibles para todos."
               },
               {
                 question: "¿Necesito descargar alguna aplicación?",
-                answer: "No, NotasApp funciona completamente en tu navegador web. Es una aplicación web progresiva que se adapta a cualquier dispositivo - computadora, tablet o móvil."
+                answer: "No, NexusNote funciona completamente en tu navegador web. Es una aplicación web progresiva que se adapta a cualquier dispositivo - computadora, tablet o móvil."
               },
               {
                 question: "¿Mis datos están seguros?",
@@ -637,11 +637,11 @@ const LandingPage = () => {
               },
               {
                 question: "¿Funciona sin conexión a internet?",
-                answer: "NotasApp requiere conexión a internet para funcionar, pero guarda automáticamente tus cambios. Si pierdes la conexión temporalmente, tus datos se sincronizan cuando vuelvas a conectarte."
+                answer: "NexusNote requiere conexión a internet para funcionar, pero guarda automáticamente tus cambios. Si pierdes la conexión temporalmente, tus datos se sincronizan cuando vuelvas a conectarte."
               },
               {
                 question: "¿Cómo se financia si es gratis?",
-                answer: "NotasApp es un proyecto personal creado para ayudar a las personas a organizarse mejor. No hay publicidad, no vendemos datos y no hay costos ocultos."
+                answer: "NexusNote es un proyecto personal creado para ayudar a las personas a organizarse mejor. No hay publicidad, no vendemos datos y no hay costos ocultos."
               }
             ].map((faq, index) => (
               <Disclosure key={index}>
@@ -676,7 +676,7 @@ const LandingPage = () => {
               ¿Listo para organizarte mejor?
             </h2>
             <p className="text-xl md:text-2xl text-slate-300 mb-12 leading-relaxed">
-              Únete a miles de usuarios que ya han transformado su productividad con NotasApp
+              Únete a miles de usuarios que ya han transformado su productividad con NexusNote
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
               <a 
@@ -715,7 +715,7 @@ const LandingPage = () => {
                 <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
                   <BookOpen className="w-5 h-5 text-white" />
                 </div>
-                <span className="text-xl font-bold text-slate-900">NotasApp</span>
+                <span className="text-xl font-bold text-slate-900">NexusNote</span>
               </div>
               <p className="text-slate-600 leading-relaxed mb-6 max-w-md">
                 La plataforma gratuita y completa para organizar tu vida digital. 
@@ -759,7 +759,7 @@ const LandingPage = () => {
           {/* Footer bottom */}
           <div className="border-t border-slate-200 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
             <div className="text-slate-600 text-sm mb-4 md:mb-0">
-              &copy; 2024 NotasApp. Todos los derechos reservados. Hecho con ❤️ para la comunidad.
+              &copy; 2024 NexusNote. Todos los derechos reservados. Hecho con ❤️ para la comunidad.
             </div>
             <div className="flex items-center space-x-6 text-sm text-slate-500">
               <div className="flex items-center space-x-2">

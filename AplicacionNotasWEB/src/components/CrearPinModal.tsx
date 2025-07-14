@@ -57,17 +57,17 @@ export const CrearPinModal: React.FC<CrearPinModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 dark:bg-gray-800">
-        <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-gray-700">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
+        <div className="flex items-center justify-between p-6 border-b border-slate-100">
           <div className="flex items-center space-x-3">
-            <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg dark:bg-blue-900">
-              <Lock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg">
+              <Lock className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-gray-900">
                 Configurar PIN del Diario
               </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-gray-500">
                 Crea un PIN para proteger tu diario personal
               </p>
             </div>
@@ -75,14 +75,14 @@ export const CrearPinModal: React.FC<CrearPinModalProps> = ({
           <button
             onClick={handleClose}
             disabled={isLoading}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50"
+            className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
           >
             <X className="w-6 h-6" />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4 p-6">
           <div>
-            <label htmlFor="pin" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="pin" className="block text-sm font-medium text-gray-700 mb-2">
               PIN (mínimo 4 dígitos)
             </label>
             <input
@@ -90,7 +90,7 @@ export const CrearPinModal: React.FC<CrearPinModalProps> = ({
               id="pin"
               value={pin}
               onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="1234"
               maxLength={8}
               disabled={isLoading}
@@ -98,7 +98,7 @@ export const CrearPinModal: React.FC<CrearPinModalProps> = ({
             />
           </div>
           <div>
-            <label htmlFor="confirmPin" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="confirmPin" className="block text-sm font-medium text-gray-700 mb-2">
               Confirmar PIN
             </label>
             <input
@@ -106,7 +106,7 @@ export const CrearPinModal: React.FC<CrearPinModalProps> = ({
               id="confirmPin"
               value={confirmPin}
               onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="1234"
               maxLength={8}
               disabled={isLoading}
@@ -114,7 +114,7 @@ export const CrearPinModal: React.FC<CrearPinModalProps> = ({
             />
           </div>
           {error && (
-            <div className="p-3 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-900 dark:text-red-200">
+            <div className="p-3 text-sm text-red-700 bg-red-100 rounded-lg">
               {error}
             </div>
           )}
@@ -123,7 +123,7 @@ export const CrearPinModal: React.FC<CrearPinModalProps> = ({
               type="button"
               onClick={handleClose}
               disabled={isLoading}
-              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-transparent rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 disabled:opacity-50"
+              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-transparent rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50"
             >
               Cancelar
             </button>

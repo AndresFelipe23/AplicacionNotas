@@ -326,30 +326,13 @@ const NotaEditor: React.FC<NotaEditorProps> = ({ nota, onNotaUpdated, onNotaDele
                         <Move className="w-4 h-4" />
                         Mover a carpeta
                       </button>
-                      <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                        <FileDown className="w-4 h-4" />
-                        Exportar
-                      </button>
-                      <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                        <Lock className="w-4 h-4" />
-                        Privacidad
-                      </button>
-                      <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                        <Info className="w-4 h-4" />
-                        Información
-                      </button>
-                      <div className="border-t border-slate-200 my-2" />
                       <button 
                         onClick={handleDeleteNota}
                         disabled={deleting}
-                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-red-50 disabled:opacity-50"
                       >
-                        {deleting ? (
-                          <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <Trash2 className="w-4 h-4" />
-                        )}
-                        {deleting ? 'Eliminando...' : 'Eliminar'}
+                        <Trash2 className="w-4 h-4" />
+                        Eliminar
                       </button>
                     </div>
                   </>
@@ -363,15 +346,6 @@ const NotaEditor: React.FC<NotaEditorProps> = ({ nota, onNotaUpdated, onNotaDele
                   onClick={() => setShowMoveModal(true)}
                 >
                   <Move className="w-4 h-4" />
-                </button>
-                <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors" title="Exportar">
-                  <FileDown className="w-4 h-4" />
-                </button>
-                <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors" title="Privacidad">
-                  <Lock className="w-4 h-4" />
-                </button>
-                <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors" title="Información">
-                  <Info className="w-4 h-4" />
                 </button>
                 <button 
                   onClick={handleDeleteNota}

@@ -56,7 +56,7 @@ export default function RegisterPage() {
               <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Crear Cuenta</h1>
-            <p className="text-gray-600 text-xs sm:text-sm">Únete a <span className="font-semibold text-blue-600">NotasApp</span></p>
+            <p className="text-gray-600 text-xs sm:text-sm">Únete a <span className="font-semibold text-blue-600">NexusNote</span></p>
           </div>
 
           {/* Formulario */}
@@ -166,7 +166,7 @@ export default function RegisterPage() {
               Comienza gratis hoy
             </h2>
             <p className="text-gray-600">
-              Únete a miles de usuarios que ya organizan su vida con NotasApp
+              Únete a miles de usuarios que ya organizan su vida con NexusNote
             </p>
           </div>
 

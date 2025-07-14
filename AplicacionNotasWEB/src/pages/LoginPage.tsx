@@ -49,7 +49,7 @@ export default function LoginPage() {
               <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Bienvenido</h1>
-            <p className="text-gray-600 text-xs sm:text-sm">Ingresa a <span className="font-semibold text-blue-600">NotasApp</span></p>
+            <p className="text-gray-600 text-xs sm:text-sm">Ingresa a <span className="font-semibold text-blue-600">NexusNote</span></p>
           </div>
 
           {/* Formulario */}
@@ -128,7 +128,7 @@ export default function LoginPage() {
               Organiza tu vida digital
             </h2>
             <p className="text-gray-600">
-              Únete a más de 50,000 usuarios que confían en NotasApp
+              Únete a más de 50,000 usuarios que confían en NexusNote
             </p>
           </div>
 

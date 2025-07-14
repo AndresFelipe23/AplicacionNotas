@@ -72,30 +72,30 @@ function App() {
                 {/* Rutas tipo dashboard - usan DashboardLayout */}
                 <Route path="/calendario" element={
                   <ProtectedRoute>
-                    <DashboardLayout>
+                    <SidebarOnlyLayout>
                       <Calendario />
-                    </DashboardLayout>
+                    </SidebarOnlyLayout>
                   </ProtectedRoute>
                 } />
                 <Route path="/diario" element={
                   <ProtectedRoute>
-                    <DashboardLayout>
+                    <SidebarOnlyLayout>
                       <Diario />
-                    </DashboardLayout>
+                    </SidebarOnlyLayout>
                   </ProtectedRoute>
                 } />
                 <Route path="/configuracion" element={
                   <ProtectedRoute>
-                    <DashboardLayout>
+                    <SidebarOnlyLayout>
                       <Configuracion />
-                    </DashboardLayout>
+                    </SidebarOnlyLayout>
                   </ProtectedRoute>
                 } />
                 <Route path="/papelera" element={
                   <ProtectedRoute>
-                    <DashboardLayout>
+                    <SidebarOnlyLayout>
                       <Papelera />
-                    </DashboardLayout>
+                    </SidebarOnlyLayout>
                   </ProtectedRoute>
                 } />
               </Routes>

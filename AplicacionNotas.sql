@@ -1087,14 +1087,30 @@ END
 
 
 CREATE PROCEDURE sp_ObtenerEntradasDiarioPorUsuario
-    @UsuarioId INT
+    @UsuarioId INT,
+    @Mes INT,
+    @Año INT
 AS
 BEGIN
-    SELECT *
+    SELECT 
+      DIA_Id AS Id,
+      DIA_UsuarioId AS UsuarioId,
+      DIA_FechaEntrada AS FechaEntrada,
+      DIA_Titulo AS Titulo,
+      DIA_Contenido AS Contenido,
+      DIA_EstadoAnimo AS EstadoAnimo,
+      DIA_FechaCreacion AS FechaCreacion,
+      DIA_FechaActualizacion AS FechaActualizacion,
+      DIA_Eliminado AS Eliminado,
+      DIA_FechaEliminacion AS FechaEliminacion
     FROM EntradasDiario
-    WHERE DIA_UsuarioId = @UsuarioId AND DIA_Eliminado = 0
+    WHERE DIA_UsuarioId = @UsuarioId 
+      AND DIA_Eliminado = 0
+      AND MONTH(DIA_FechaEntrada) = @Mes
+      AND YEAR(DIA_FechaEntrada) = @Año
     ORDER BY DIA_FechaEntrada DESC;
 END
+GO
 
 
 CREATE PROCEDURE sp_ObtenerEntradaDiarioPorFecha
